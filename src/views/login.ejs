@@ -8,14 +8,16 @@
 <body>
   <div class="login-box">
     <h1>Whispr</h1>
-    <p>لوحة تحكم الرد على تقييمات Google</p>
+    <p>تسجيل الدخول للوحة التحكم</p>
     <% if (error) { %>
       <p class="error"><%= error %></p>
     <% } %>
     <form method="POST" action="/login">
-      <input type="password" name="password" placeholder="كلمة المرور" required autofocus />
+      <input type="email" name="email" placeholder="البريد الإلكتروني" required autofocus />
+      <input type="password" name="password" placeholder="كلمة المرور" required />
       <button type="submit">دخول</button>
     </form>
+    <p class="muted small">ما عندك حساب؟ <a href="/signup">أنشئ حساب جديد</a></p>
   </div>
 </body>
 </html>

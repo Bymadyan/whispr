@@ -3,17 +3,18 @@ const express = require("express");
 const session = require("express-session");
 const path = require("path");
 
-const requireEnv = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI", "SESSION_SECRET", "DASHBOARD_PASSWORD"];
+const requireEnv = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI", "SESSION_SECRET"];
 const missing = requireEnv.filter((k) => !process.env[k]);
 if (missing.length) {
   console.warn(`تحذير: المتغيرات التالية غير مضبوطة في .env: ${missing.join(", ")}`);
+}
+if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
+  console.warn("تحذير: STRIPE_SECRET_KEY أو STRIPE_PRICE_ID غير مضبوطة — صفحة الدفع لن تعمل حتى تضبطها.");
 }
 
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   session({
@@ -24,30 +25,25 @@ app.use(
   })
 );
 
-function requireLogin(req, res, next) {
-  if (req.session.loggedIn) return next();
-  res.redirect("/login");
-}
+// راوت الـ webhook الخاص بـ Stripe يحتاج body خام (raw) للتحقق من التوقيع، فنسجله قبل urlencoded العام
+app.use("/", require("./routes/billing"));
 
-app.get("/login", (req, res) => {
-  res.render("login", { error: null });
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  if (req.session.userId) return res.redirect("/dashboard");
+  res.render("landing");
 });
 
-app.post("/login", (req, res) => {
-  if (req.body.password && req.body.password === process.env.DASHBOARD_PASSWORD) {
-    req.session.loggedIn = true;
-    return res.redirect("/");
-  }
-  res.render("login", { error: "كلمة المرور غير صحيحة" });
-});
+app.use("/", require("./routes/account"));
+app.use("/auth", require("./routes/auth"));
+app.use("/", require("./routes/dashboard"));
+app.use("/reviews", require("./routes/reviews"));
 
-app.post("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/login"));
+app.use((req, res) => {
+  res.status(404).send("الصفحة غير موجودة");
 });
-
-app.use("/auth", requireLogin, require("./routes/auth"));
-app.use("/", requireLogin, require("./routes/dashboard"));
-app.use("/reviews", requireLogin, require("./routes/reviews"));
 
 app.use((err, req, res, next) => {
   console.error(err);

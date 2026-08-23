@@ -3,11 +3,14 @@ const router = express.Router();
 const db = require("../db");
 const google = require("../googleClient");
 const { generateDraftReply } = require("../replyGenerator");
+const { requireAuth, requireActiveSubscription } = require("../middleware");
 
-// يجيب التقييمات الجديدة فقط من Google لكل الحسابات المربوطة، ويولد مسودة رد لكل تقييم جديد
+router.use(requireAuth, requireActiveSubscription);
+
+// يجيب التقييمات الجديدة فقط من Google لكل الحسابات المربوطة بهذا العميل، ويولد مسودة رد لكل تقييم جديد
 router.post("/sync", async (req, res, next) => {
   try {
-    const accounts = db.prepare(`SELECT * FROM accounts`).all();
+    const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ?`).all(req.user.id);
     let newCount = 0;
 
     for (const account of accounts) {
@@ -65,16 +68,30 @@ router.post("/sync", async (req, res, next) => {
       db.prepare(`UPDATE accounts SET last_synced_at = strftime('%s','now') WHERE id = ?`).run(account.id);
     }
 
-    res.redirect(`/?synced=${newCount}`);
+    res.redirect(`/dashboard?synced=${newCount}`);
   } catch (err) {
     next(err);
   }
 });
 
+// يتأكد إن التقييم يخص نشاط تجاري تابع للعميل المسجل دخوله حالياً (يمنع أي تسريب بيانات بين العملاء)
+function getOwnedReview(reviewId, userId) {
+  return db
+    .prepare(
+      `SELECT r.*, a.user_id, a.business_name, a.id AS account_id
+       FROM reviews r JOIN accounts a ON a.id = r.account_id
+       WHERE r.id = ? AND a.user_id = ?`
+    )
+    .get(reviewId, userId);
+}
+
 // حفظ تعديل المستخدم على نص المسودة (بدون نشر)
 router.post("/:id/draft", (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
+    const review = getOwnedReview(reviewId, req.user.id);
+    if (!review) return res.status(404).send("التقييم غير موجود");
+
     const { draftText } = req.body;
 
     const existing = db.prepare(`SELECT id FROM drafts WHERE review_id = ?`).get(reviewId);
@@ -88,7 +105,7 @@ router.post("/:id/draft", (req, res, next) => {
       ).run(reviewId, draftText);
     }
 
-    res.redirect("/#review-" + reviewId);
+    res.redirect("/dashboard#review-" + reviewId);
   } catch (err) {
     next(err);
   }
@@ -98,11 +115,7 @@ router.post("/:id/draft", (req, res, next) => {
 router.post("/:id/regenerate", async (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
-    const review = db
-      .prepare(
-        `SELECT r.*, a.business_name FROM reviews r JOIN accounts a ON a.id = r.account_id WHERE r.id = ?`
-      )
-      .get(reviewId);
+    const review = getOwnedReview(reviewId, req.user.id);
     if (!review) return res.status(404).send("التقييم غير موجود");
 
     const { text, generatedBy } = await generateDraftReply({
@@ -123,7 +136,7 @@ router.post("/:id/regenerate", async (req, res, next) => {
       ).run(reviewId, text, generatedBy);
     }
 
-    res.redirect("/#review-" + reviewId);
+    res.redirect("/dashboard#review-" + reviewId);
   } catch (err) {
     next(err);
   }
@@ -133,6 +146,8 @@ router.post("/:id/regenerate", async (req, res, next) => {
 router.post("/:id/publish", async (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
+    const review = getOwnedReview(reviewId, req.user.id);
+    if (!review) return res.status(404).send("التقييم غير موجود");
 
     // لو المستخدم عدّل النص في الصندوق ولحقّ الضغط على نشر مباشرة بدون حفظ منفصل، نحفظ آخر نص كتبه أولاً
     if (typeof req.body.draftText === "string" && req.body.draftText.trim()) {
@@ -141,33 +156,23 @@ router.post("/:id/publish", async (req, res, next) => {
       ).run(req.body.draftText, reviewId);
     }
 
-    const row = db
-      .prepare(
-        `SELECT r.id AS review_id, r.account_id, r.google_review_id, d.draft_text
-         FROM reviews r
-         JOIN accounts a ON a.id = r.account_id
-         JOIN drafts d ON d.review_id = r.id
-         WHERE r.id = ?`
-      )
-      .get(reviewId);
-
-    if (!row) return res.status(404).send("لا توجد مسودة لهذا التقييم");
-    if (!row.draft_text || !row.draft_text.trim()) {
+    const draft = db.prepare(`SELECT draft_text FROM drafts WHERE review_id = ?`).get(reviewId);
+    if (!draft || !draft.draft_text || !draft.draft_text.trim()) {
       return res.status(400).send("نص المسودة فاضي، عدّل الرد قبل النشر");
     }
 
-    const account = db.prepare(`SELECT * FROM accounts WHERE id = ?`).get(row.account_id);
+    const account = db.prepare(`SELECT * FROM accounts WHERE id = ?`).get(review.account_id);
     const client = await google.getAuthedClientForAccount(account);
-    const reviewResourceName = `${account.location_name}/reviews/${row.google_review_id}`;
+    const reviewResourceName = `${account.location_name}/reviews/${review.google_review_id}`;
 
-    await google.publishReply(client, reviewResourceName, row.draft_text);
+    await google.publishReply(client, reviewResourceName, draft.draft_text);
 
     db.prepare(
       `UPDATE drafts SET status = 'published', published_at = strftime('%s','now') WHERE review_id = ?`
     ).run(reviewId);
     db.prepare(`UPDATE reviews SET has_owner_reply = 1 WHERE id = ?`).run(reviewId);
 
-    res.redirect("/#review-" + reviewId);
+    res.redirect("/dashboard#review-" + reviewId);
   } catch (err) {
     next(err);
   }

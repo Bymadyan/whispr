@@ -9,8 +9,28 @@ const db = new Database(path.join(dataDir, "whispr.sqlite"));
 db.pragma("journal_mode = WAL");
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    business_name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+    stripe_customer_id TEXT,
+    stripe_subscription_id TEXT,
+    status TEXT NOT NULL DEFAULT 'incomplete', -- incomplete | active | trialing | past_due | canceled | unpaid
+    current_period_end INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+  );
+
   CREATE TABLE IF NOT EXISTS accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER REFERENCES users(id),
     business_name TEXT,
     google_account_name TEXT,   -- accounts/{id} من Google
     location_name TEXT,          -- accounts/{id}/locations/{id} من Google
@@ -45,5 +65,11 @@ db.exec(`
     published_at INTEGER
   );
 `);
+
+// ترقية بسيطة لقواعد بيانات قديمة أُنشئت قبل إضافة نظام الحسابات المتعدد (multi-tenant)
+const accountColumns = db.prepare(`PRAGMA table_info(accounts)`).all().map((c) => c.name);
+if (!accountColumns.includes("user_id")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN user_id INTEGER REFERENCES users(id)`);
+}
 
 module.exports = db;

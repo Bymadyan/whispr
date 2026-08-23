@@ -8,7 +8,11 @@
 <body>
   <header class="topbar">
     <h1>Whispr</h1>
-    <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+    <nav class="nav-links">
+      <span class="muted small"><%= user.business_name %></span>
+      <a href="/billing">الاشتراك</a>
+      <form method="POST" action="/logout" style="display:inline"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+    </nav>
   </header>
 
   <div class="container">

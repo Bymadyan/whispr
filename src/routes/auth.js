@@ -2,6 +2,14 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const google = require("../googleClient");
+const { requireAuth, requireActiveSubscription } = require("../middleware");
+
+router.use(requireAuth, requireActiveSubscription);
+
+// صفحة وسيطة بعد الاشتراك تشرح للعميل إنه الخطوة الجاية هي ربط حساب Google
+router.get("/connect-google", (req, res) => {
+  res.redirect("/dashboard");
+});
 
 // يبدأ تدفق OAuth لربط حساب Google Business Profile
 router.get("/google", (req, res) => {
@@ -30,13 +38,12 @@ router.get("/select-location", async (req, res, next) => {
     const tokens = req.session.pendingTokens;
     if (!tokens) return res.redirect("/auth/google");
 
-    const fakeClient = google.getAuthedClientForAccount({
+    const client = await google.getAuthedClientForAccount({
       id: null,
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
       token_expiry: tokens.expiry_date,
     });
-    const client = await fakeClient;
 
     const accounts = await google.listGoogleAccounts(client);
     const locationsByAccount = [];
@@ -60,9 +67,10 @@ router.post("/select-location", (req, res, next) => {
     if (!locationName) return res.status(400).send("لازم تختار نشاط تجاري");
 
     db.prepare(
-      `INSERT INTO accounts (business_name, location_name, access_token, refresh_token, token_expiry)
-       VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO accounts (user_id, business_name, location_name, access_token, refresh_token, token_expiry)
+       VALUES (?, ?, ?, ?, ?, ?)`
     ).run(
+      req.user.id,
       businessName || locationName,
       locationName,
       tokens.access_token,
@@ -71,7 +79,7 @@ router.post("/select-location", (req, res, next) => {
     );
 
     delete req.session.pendingTokens;
-    res.redirect("/");
+    res.redirect("/dashboard");
   } catch (err) {
     next(err);
   }

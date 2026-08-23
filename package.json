@@ -13,12 +13,14 @@
     "node": ">=18"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.3.0",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
-    "google-auth-library": "^9.14.1"
+    "google-auth-library": "^9.14.1",
+    "stripe": "^17.3.1"
   },
   "optionalDependencies": {
     "@anthropic-ai/sdk": "^0.32.1"
