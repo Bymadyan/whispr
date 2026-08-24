@@ -25,17 +25,29 @@
         <ul>
           <% accounts.forEach(function(a) { %>
             <li>
-              <strong><%= a.business_name %></strong>
-              <span class="muted">
-                <% if (a.last_synced_at) { %>
-                  آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
-                <% } else { %>
-                  ما تمت أي مزامنة بعد
-                <% } %>
-              </span>
+              <div>
+                <strong><%= a.business_name %></strong>
+                <span class="muted">
+                  <% if (a.last_synced_at) { %>
+                    آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
+                  <% } else { %>
+                    ما تمت أي مزامنة بعد
+                  <% } %>
+                </span>
+              </div>
+              <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
+                <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
+                <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
+                  <%= a.auto_publish_positive ? '⚡ النشر التلقائي للإيجابي: مفعّل' : '⚡ فعّل النشر التلقائي للإيجابي' %>
+                </button>
+              </form>
             </li>
           <% }) %>
         </ul>
+        <p class="muted small">
+          "النشر التلقائي للإيجابي" ينشر رد فوري بدون مراجعتك بس للتقييمات 4-5 نجوم اللي ما فيها أي كلمة سلبية بالتعليق.
+          أي تقييم فيه شك أو شكوى يبقى مسودة تنتظر مراجعتك زي المعتاد.
+        </p>
         <div class="actions-row">
           <form method="POST" action="/reviews/sync">
             <button class="btn" type="submit">🔄 جلب التقييمات الجديدة</button>
@@ -58,7 +70,9 @@
             </span>
             <strong><%= r.reviewer_name || 'مستخدم Google' %></strong>
             <span class="muted"><%= r.business_name %></span>
-            <% if (r.draft_status === 'published') { %>
+            <% if (r.draft_status === 'published' && r.auto_published) { %>
+              <span class="badge published">⚡ نُشر تلقائياً</span>
+            <% } else if (r.draft_status === 'published') { %>
               <span class="badge published">تم النشر ✅</span>
             <% } else if (r.has_owner_reply) { %>
               <span class="badge">فيه رد مسبق على Google</span>

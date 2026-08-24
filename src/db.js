@@ -38,6 +38,7 @@ db.exec(`
     refresh_token TEXT,
     token_expiry INTEGER,
     last_synced_at INTEGER,
+    auto_publish_positive INTEGER NOT NULL DEFAULT 0, -- نشر تلقائي للتقييمات الإيجابية الآمنة فقط، تعطيل افتراضياً
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -60,6 +61,7 @@ db.exec(`
     draft_text TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'draft', -- draft | edited | published
     generated_by TEXT NOT NULL DEFAULT 'template', -- template | claude
+    auto_published INTEGER NOT NULL DEFAULT 0, -- 1 لو انتشر تلقائياً بدون مراجعة بشرية (تقييم آمن + الإعداد مفعّل)
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     published_at INTEGER
@@ -70,6 +72,14 @@ db.exec(`
 const accountColumns = db.prepare(`PRAGMA table_info(accounts)`).all().map((c) => c.name);
 if (!accountColumns.includes("user_id")) {
   db.exec(`ALTER TABLE accounts ADD COLUMN user_id INTEGER REFERENCES users(id)`);
+}
+if (!accountColumns.includes("auto_publish_positive")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN auto_publish_positive INTEGER NOT NULL DEFAULT 0`);
+}
+
+const draftColumns = db.prepare(`PRAGMA table_info(drafts)`).all().map((c) => c.name);
+if (!draftColumns.includes("auto_published")) {
+  db.exec(`ALTER TABLE drafts ADD COLUMN auto_published INTEGER NOT NULL DEFAULT 0`);
 }
 
 module.exports = db;

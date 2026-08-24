@@ -65,7 +65,9 @@ body {
 
 .accounts, .reviews { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
 .accounts ul { list-style: none; padding: 0; }
-.accounts li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.accounts li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.auto-publish-toggle { margin: 0; }
+.btn.tiny { padding: 6px 10px; font-size: 12px; }
 
 .review-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
 .review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }

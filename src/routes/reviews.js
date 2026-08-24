@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require("../db");
 const google = require("../googleClient");
 const { generateDraftReply } = require("../replyGenerator");
+const { isLowRisk } = require("../riskClassifier");
 const { requireAuth, requireActiveSubscription } = require("../middleware");
 
 router.use(requireAuth, requireActiveSubscription);
@@ -58,9 +59,25 @@ router.post("/sync", async (req, res, next) => {
               reviewerName: (gr.reviewer && gr.reviewer.displayName) || "",
             });
 
-            db.prepare(
-              `INSERT INTO drafts (review_id, draft_text, status, generated_by) VALUES (?, ?, 'draft', ?)`
-            ).run(info.lastInsertRowid, text, generatedBy);
+            const eligibleForAutoPublish =
+              account.auto_publish_positive && isLowRisk({ starRating, comment });
+
+            if (eligibleForAutoPublish) {
+              // نشر تلقائي فوري — فقط لتقييمات آمنة (4-5 نجوم بدون أي إشارة سلبية بالتعليق)
+              // وفقط إذا فعّل صاحب النشاط هذا الإعداد بنفسه. أي شك يرجّح كفة المراجعة اليدوية.
+              const reviewResourceName = `${account.location_name}/reviews/${gr.reviewId}`;
+              await google.publishReply(client, reviewResourceName, text);
+
+              db.prepare(
+                `INSERT INTO drafts (review_id, draft_text, status, generated_by, auto_published, published_at)
+                 VALUES (?, ?, 'published', ?, 1, strftime('%s','now'))`
+              ).run(info.lastInsertRowid, text, generatedBy);
+              db.prepare(`UPDATE reviews SET has_owner_reply = 1 WHERE id = ?`).run(info.lastInsertRowid);
+            } else {
+              db.prepare(
+                `INSERT INTO drafts (review_id, draft_text, status, generated_by) VALUES (?, ?, 'draft', ?)`
+              ).run(info.lastInsertRowid, text, generatedBy);
+            }
           }
         }
       } while (pageToken);
