@@ -11,15 +11,4 @@ function requireAuth(req, res, next) {
   next();
 }
 
-const ACTIVE_STATUSES = new Set(["active", "trialing"]);
-
-function requireActiveSubscription(req, res, next) {
-  const sub = db.prepare(`SELECT * FROM subscriptions WHERE user_id = ?`).get(req.user.id);
-  if (!sub || !ACTIVE_STATUSES.has(sub.status)) {
-    return res.redirect("/billing");
-  }
-  req.subscription = sub;
-  next();
-}
-
-module.exports = { requireAuth, requireActiveSubscription };
+module.exports = { requireAuth };

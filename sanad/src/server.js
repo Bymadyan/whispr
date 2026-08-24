@@ -41,9 +41,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", (req, res) => {
   if (req.session.userId) return res.redirect("/dashboard");
-  res.render("landing");
+  const whatsappNumber = (process.env.TWILIO_WHATSAPP_FROM || "").replace("whatsapp:", "").replace("+", "");
+  res.render("landing", { whatsappNumber });
 });
 
+app.use("/", require("./routes/magicLogin"));
 app.use("/", require("./routes/auth"));
 app.use("/", require("./routes/account"));
 app.use("/", require("./routes/dashboard"));

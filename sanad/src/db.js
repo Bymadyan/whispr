@@ -9,11 +9,14 @@ const db = new Database(path.join(dataDir, "sanad.sqlite"));
 db.pragma("journal_mode = WAL");
 
 db.exec(`
+  -- email/password_hash تصير فاضية للحسابات اللي تتولد تلقائياً من أول رسالة واتساب (بدون تسجيل ويب).
+  -- dashboard_token رابط دخول سحري بدون كلمة مرور، يثبت الهوية عن طريق امتلاك رقم واتساب المرتبط أصلاً.
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    business_name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL,
+    business_name TEXT,
+    email TEXT UNIQUE,
+    password_hash TEXT,
+    dashboard_token TEXT NOT NULL UNIQUE,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -57,6 +60,8 @@ db.exec(`
     status TEXT NOT NULL DEFAULT 'unpaid', -- unpaid | paid
     raw_transcript TEXT,
     source TEXT NOT NULL DEFAULT 'text', -- text | voice
+    payment_url TEXT,
+    stripe_checkout_session_id TEXT,
     reminder_sent_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))

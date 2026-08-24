@@ -21,6 +21,15 @@
         <p class="error">رقم واتسابك مو مربوط بعد.</p>
         <p><a href="/connect-whatsapp" class="btn">اربط رقمك الحين</a></p>
       </div>
+    <% } else if (!hasActiveSubscription) { %>
+      <div class="accounts">
+        <% if (remainingFree > 0) { %>
+          <p>🎁 باقي لك <strong><%= remainingFree %></strong> فاتورة مجانية قبل ما تحتاج تشترك.</p>
+        <% } else { %>
+          <p class="error">خلصت فواتيرك المجانية. اشترك عشان تكمل تسوي فواتير غير محدودة.</p>
+        <% } %>
+        <p><a href="/billing" class="btn">الاشتراك</a></p>
+      </div>
     <% } %>
 
     <div class="stats-row">
@@ -55,6 +64,9 @@
             <p><%= inv.description || '-' %></p>
             <p><strong><%= inv.amount != null ? inv.amount : '؟' %> <%= inv.currency || '' %></strong></p>
             <p class="muted small"><%= new Date(inv.created_at * 1000).toLocaleString('ar') %> · <%= inv.source === 'voice' ? '🎙️ صوتي' : '⌨️ نصي' %></p>
+            <% if (inv.payment_url) { %>
+              <p class="small"><a href="<%= inv.payment_url %>" target="_blank" rel="noopener">💳 رابط الدفع</a></p>
+            <% } %>
           </div>
           <div>
             <span class="badge <%= inv.status === 'paid' ? 'paid' : '' %>"><%= inv.status === 'paid' ? 'مسددة' : 'غير مسددة' %></span>

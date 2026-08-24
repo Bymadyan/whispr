@@ -19,10 +19,14 @@
     <h2>وثّق شغلك وحصّل فلوسك بدون ورق ولا نسيان</h2>
     <p class="hero-sub">
       خلّصت شغلة عند زبون؟ ابعت رسالة صوتية بواتساب لسند تقولها تفاصيل الشغلة والمبلغ — وخلال ثوانٍ
-      يجهّز لك فاتورة منظمة جاهزة ترسلها لزبونك، ويذكّرك تلقائياً لو تأخر التحصيل.
+      يجهّز لك فاتورة منظمة برابط دفع جاهز ترسله لزبونك، ويذكّرك تلقائياً لو تأخر التحصيل.
     </p>
-    <a href="/signup" class="btn hero-cta">ابدأ الاشتراك</a>
-    <p class="muted small">بدون التزام طويل، تقدر تلغي في أي وقت من لوحة التحكم.</p>
+    <% if (whatsappNumber) { %>
+      <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">📱 جرّب الحين من واتساب — مجاناً</a>
+      <p class="muted small">بدون تسجيل ولا كلمة مرور. أول 3 فواتير (ورابط الدفع فيها) مجانية بالكامل.</p>
+    <% } else { %>
+      <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
+    <% } %>
   </section>
 
   <section class="features">
@@ -45,16 +49,20 @@
   </section>
 
   <section class="pricing">
-    <h2>السعر بسيط وواضح</h2>
+    <h2>جرّب مجاناً، اشترك بس لو عجبك</h2>
     <div class="price-card">
-      <div class="price">15$ <span class="muted">/ شهرياً</span></div>
+      <div class="price">أول 3 فواتير <span class="muted">مجاناً</span></div>
       <ul>
-        <li>عدد غير محدود من الفواتير</li>
-        <li>رسائل صوتية ونصية</li>
-        <li>تذكير تلقائي بالتحصيل</li>
+        <li>فاتورة + رابط دفع لكل شغلة</li>
+        <li>بدون تسجيل ولا بطاقة دفع</li>
+        <li>بعدها 15$/شهرياً لفواتير غير محدودة</li>
         <li>إلغاء في أي وقت</li>
       </ul>
-      <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
+      <% if (whatsappNumber) { %>
+        <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">ابدأ من واتساب</a>
+      <% } else { %>
+        <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
+      <% } %>
     </div>
   </section>
 
