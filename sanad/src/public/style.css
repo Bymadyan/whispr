@@ -1,0 +1,125 @@
+:root {
+  --bg: #f7f7f8;
+  --card: #ffffff;
+  --border: #e2e2e6;
+  --text: #1d1d1f;
+  --muted: #6b6b70;
+  --primary: #0d9488;
+  --success: #16a34a;
+  --danger: #dc2626;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+.container { max-width: 800px; margin: 0 auto; padding: 24px 16px 64px; }
+.container.narrow { max-width: 480px; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { margin: 0; font-size: 20px; }
+
+.login-box {
+  max-width: 360px;
+  margin: 80px auto;
+  background: var(--card);
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.login-box input, .login-box button { width: 100%; padding: 10px; margin-top: 12px; border-radius: 8px; border: 1px solid var(--border); }
+.login-box button { background: var(--primary); color: white; border: none; cursor: pointer; }
+
+.error { color: var(--danger); }
+.muted { color: var(--muted); font-size: 13px; }
+.small { font-size: 12px; }
+
+.btn {
+  display: inline-block;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+}
+.btn.secondary { background: #edf1f7; color: var(--text); }
+.btn.small-btn { padding: 6px 12px; font-size: 13px; }
+.link-btn { background: none; border: none; color: var(--muted); cursor: pointer; text-decoration: underline; }
+
+.nav-links { display: flex; align-items: center; gap: 16px; }
+.nav-links a { color: var(--text); text-decoration: none; }
+.nav-links .btn { color: white; }
+
+.hero { max-width: 700px; margin: 0 auto; padding: 64px 16px 32px; text-align: center; }
+.hero h2 { font-size: 32px; margin-bottom: 12px; }
+.hero-sub { color: var(--muted); font-size: 16px; line-height: 1.7; margin-bottom: 24px; }
+.hero-cta { padding: 14px 28px; font-size: 16px; }
+
+.features {
+  max-width: 900px;
+  margin: 32px auto;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.feature-card h3 { margin: 0 0 8px; font-size: 16px; }
+.feature-card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+.pricing { text-align: center; padding: 32px 16px 64px; }
+.price-card {
+  max-width: 320px;
+  margin: 16px auto 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+}
+.price-card .price { font-size: 40px; font-weight: bold; margin-bottom: 16px; }
+.price-card ul { list-style: none; padding: 0; margin: 0 0 24px; text-align: right; }
+.price-card li { padding: 6px 0; color: var(--muted); font-size: 14px; }
+.price-card li::before { content: "✓ "; color: var(--success); font-weight: bold; }
+
+.footer { text-align: center; padding: 24px 16px; }
+
+.code-box {
+  background: var(--card);
+  border: 2px dashed var(--primary);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin: 20px 0;
+}
+.code-box .code { font-size: 32px; font-weight: bold; letter-spacing: 4px; color: var(--primary); }
+
+.stats-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.stat-card { flex: 1; min-width: 140px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-card .value { font-size: 24px; font-weight: bold; }
+.stat-card .label { color: var(--muted); font-size: 13px; }
+
+.invoices { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.invoice-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.invoice-info h4 { margin: 0 0 4px; }
+.invoice-info p { margin: 2px 0; color: var(--muted); font-size: 14px; }
+
+.badge { background: #fff7e6; color: #a15c00; padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+.badge.paid { background: #e7f8ed; color: var(--success); }
+
+.empty-state { text-align: center; padding: 40px 16px; color: var(--muted); }

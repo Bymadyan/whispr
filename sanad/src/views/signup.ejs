@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إنشاء حساب - سند</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="login-box">
+    <h1>سند</h1>
+    <p>أنشئ حساب نشاطك التجاري</p>
+    <% if (error) { %>
+      <p class="error"><%= error %></p>
+    <% } %>
+    <form method="POST" action="/signup">
+      <input type="text" name="businessName" placeholder="اسمك أو اسم نشاطك" value="<%= values.businessName || '' %>" required />
+      <input type="email" name="email" placeholder="البريد الإلكتروني" value="<%= values.email || '' %>" required />
+      <input type="password" name="password" placeholder="كلمة المرور (8 أحرف على الأقل)" minlength="8" required />
+      <button type="submit">إنشاء الحساب والمتابعة للدفع</button>
+    </form>
+    <p class="muted small">عندك حساب؟ <a href="/login">سجّل الدخول</a></p>
+  </div>
+</body>
+</html>

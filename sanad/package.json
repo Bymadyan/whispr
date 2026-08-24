@@ -1,0 +1,28 @@
+{
+  "name": "sanad",
+  "version": "0.1.0",
+  "description": "سند — يحوّل ملاحظتك الصوتية بواتساب إلى فاتورة جاهزة للحرفيين وأصحاب الخدمات",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "stripe": "^17.3.1",
+    "twilio": "^5.3.5"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.32.1"
+  }
+}

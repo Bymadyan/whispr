@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اربط واتساب - سند</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>سند</h1>
+    <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+  </header>
+
+  <div class="container narrow">
+    <% if (link) { %>
+      <div class="accounts">
+        <h2>رقمك مربوط ✅</h2>
+        <p class="muted">الرقم المربوط: <%= link.phone_number.replace('whatsapp:', '') %></p>
+        <p>ابعت الحين رسالة صوتية أو نصية على واتساب سند فيها تفاصيل أي شغلة، وراح تجيك فاتورة جاهزة فوراً.</p>
+        <p><a href="/dashboard" class="btn">الذهاب للوحة التحكم</a></p>
+      </div>
+    <% } else { %>
+      <div class="accounts">
+        <h2>اربط رقم واتسابك</h2>
+        <p>خطوتين بس:</p>
+        <ol>
+          <li>احفظ رقم سند على واتسابك: <strong><%= whatsappNumber %></strong></li>
+          <li>ابعت له رسالة نصية فيها الرمز التالي بالضبط:</li>
+        </ol>
+
+        <div class="code-box">
+          <div class="code"><%= pendingCode.code %></div>
+          <p class="muted small">صالح لمدة 30 دقيقة</p>
+        </div>
+
+        <form method="POST" action="/connect-whatsapp/new-code">
+          <button class="link-btn" type="submit">الرمز انتهت صلاحيته؟ ولّد رمز جديد</button>
+        </form>
+
+        <p class="muted small">بعد ما تبعت الرمز، حدّث هذي الصفحة لتتأكد إن الربط تم.</p>
+        <p><a href="/connect-whatsapp">🔄 تحديث الصفحة</a></p>
+      </div>
+    <% } %>
+  </div>
+</body>
+</html>
