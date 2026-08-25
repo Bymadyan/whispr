@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require("../db");
 const stripe = require("../stripeClient");
 const { requireAuth } = require("../middleware");
-const { normalizeCurrency } = require("../config");
+const { normalizeCurrency, PLATFORM_FEE_PERCENT } = require("../config");
 const { sendMessage } = require("../whatsapp");
 
 function baseUrl() {
@@ -78,6 +78,7 @@ async function buildInvoicePaymentUrl(invoice, user) {
   if (user && user.stripe_connect_charges_enabled && user.stripe_connect_account_id) {
     sessionParams.payment_intent_data = {
       transfer_data: { destination: user.stripe_connect_account_id },
+      application_fee_amount: Math.round((amountInCents * PLATFORM_FEE_PERCENT) / 100),
     };
   }
 
