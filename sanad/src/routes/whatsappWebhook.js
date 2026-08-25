@@ -6,7 +6,7 @@ const db = require("../db");
 const { downloadMedia, sendMessage } = require("../whatsapp");
 const { transcribeAudio } = require("../transcribe");
 const { extractInvoice } = require("../extractInvoice");
-const { buildInvoicePaymentUrl, buildSubscriptionCheckoutUrl } = require("./billing");
+const { buildInvoicePaymentUrl, buildSubscriptionCheckoutUrl, buildConnectOnboardingUrl } = require("./billing");
 const { FREE_INVOICE_LIMIT } = require("../config");
 
 function baseUrl() {
@@ -54,14 +54,24 @@ function formatInvoiceMessage(invoice, remainingFree) {
   return lines.join("\n");
 }
 
-function welcomeMessage() {
-  return [
+function welcomeMessage(connectUrl) {
+  const lines = [
     "أهلاً فيك! 👋 هذا بوت *سند* — يحوّل رسالتك الصوتية أو النصية لفاتورة جاهزة فوراً.",
     "",
     `أول ${FREE_INVOICE_LIMIT} فواتير (ورابط الدفع فيها) مجانية بالكامل، بدون أي تسجيل.`,
     "",
     "جرّب الحين: ابعت رسالة صوتية أو اكتب مثلاً \"سويت صيانة مكيف عند أحمد بمبلغ 250 ريال\".",
-  ].join("\n");
+  ];
+
+  if (connectUrl) {
+    lines.push(
+      "",
+      "💳 عشان فلوس فواتيرك تروح لحسابك البنكي مباشرة أول ما يدفع زبونك، اربطه من هنا (٣ دقايق، مرة وحدة بس، اختياري):",
+      connectUrl
+    );
+  }
+
+  return lines.join("\n");
 }
 
 function getOrCreateUserForPhone(from) {
@@ -111,7 +121,7 @@ async function processInvoiceMessage(res, user, transcript, source, isNew) {
   let invoice = db.prepare(`SELECT * FROM invoices WHERE id = ?`).get(result.lastInsertRowid);
 
   try {
-    const paymentUrl = await buildInvoicePaymentUrl(invoice);
+    const paymentUrl = await buildInvoicePaymentUrl(invoice, user);
     if (paymentUrl) invoice = db.prepare(`SELECT * FROM invoices WHERE id = ?`).get(invoice.id);
   } catch (err) {
     console.error("فشل إنشاء رابط الدفع للفاتورة:", err.message);
@@ -119,7 +129,16 @@ async function processInvoiceMessage(res, user, transcript, source, isNew) {
 
   const remainingFree = hasActiveSubscription ? null : Math.max(0, FREE_INVOICE_LIMIT - (invoiceCount + 1));
   let message = formatInvoiceMessage(invoice, remainingFree);
-  if (isNew) message = `${welcomeMessage()}\n\n—\n\n${message}\n\n📊 لوحة تحكمك (بدون تسجيل دخول): ${dashboardUrl(user)}`;
+
+  if (isNew) {
+    let connectUrl = null;
+    try {
+      connectUrl = await buildConnectOnboardingUrl(user);
+    } catch (err) {
+      console.error("فشل إنشاء رابط ربط الحساب البنكي:", err.message);
+    }
+    message = `${welcomeMessage(connectUrl)}\n\n—\n\n${message}\n\n📊 لوحة تحكمك (بدون تسجيل دخول): ${dashboardUrl(user)}`;
+  }
 
   reply(res, message);
 }

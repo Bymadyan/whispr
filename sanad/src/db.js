@@ -11,12 +11,17 @@ db.pragma("journal_mode = WAL");
 db.exec(`
   -- email/password_hash تصير فاضية للحسابات اللي تتولد تلقائياً من أول رسالة واتساب (بدون تسجيل ويب).
   -- dashboard_token رابط دخول سحري بدون كلمة مرور، يثبت الهوية عن طريق امتلاك رقم واتساب المرتبط أصلاً.
+  -- stripe_connect_* لحساب Stripe Connect الخاص بالمستخدم، عشان فلوس فواتيره تروح لحسابه البنكي هو
+  -- مباشرة بدل حساب المنصة. charges_enabled يتحدث تلقائياً عبر webhook (account.updated) بعد ما يكمل
+  -- نموذج الربط البنكي.
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     business_name TEXT,
     email TEXT UNIQUE,
     password_hash TEXT,
     dashboard_token TEXT NOT NULL UNIQUE,
+    stripe_connect_account_id TEXT,
+    stripe_connect_charges_enabled INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 

@@ -48,21 +48,24 @@ async function buildSubscriptionCheckoutUrl(user) {
   return session.url;
 }
 
-// يبني رابط دفع لمرة وحدة لفاتورة معيّنة — هذا اللي الزبون النهائي يضغطه ويدفع فيه
-async function buildInvoicePaymentUrl(invoice) {
+// يبني رابط دفع لمرة وحدة لفاتورة معيّنة — هذا اللي الزبون النهائي يضغطه ويدفع فيه.
+// لو صاحب الفاتورة كمّل ربط حسابه البنكي (Stripe Connect)، الفلوس تروح له مباشرة (destination charge).
+// غير كذا، الفلوس تدخل حساب المنصة مؤقتاً لحد ما يكمّل الربط.
+async function buildInvoicePaymentUrl(invoice, user) {
   if (!stripe || invoice.amount == null || invoice.amount <= 0) return null;
 
   const currency = normalizeCurrency(invoice.currency);
   const productName = `فاتورة: ${invoice.description || "خدمة"}`.slice(0, 250);
+  const amountInCents = Math.round(invoice.amount * 100);
 
-  const session = await stripe.checkout.sessions.create({
+  const sessionParams = {
     mode: "payment",
     line_items: [
       {
         price_data: {
           currency,
           product_data: { name: productName },
-          unit_amount: Math.round(invoice.amount * 100),
+          unit_amount: amountInCents,
         },
         quantity: 1,
       },
@@ -70,7 +73,15 @@ async function buildInvoicePaymentUrl(invoice) {
     success_url: `${baseUrl()}/pay/success`,
     cancel_url: `${baseUrl()}/pay/cancel`,
     metadata: { sanad_invoice_id: String(invoice.id) },
-  });
+  };
+
+  if (user && user.stripe_connect_charges_enabled && user.stripe_connect_account_id) {
+    sessionParams.payment_intent_data = {
+      transfer_data: { destination: user.stripe_connect_account_id },
+    };
+  }
+
+  const session = await stripe.checkout.sessions.create(sessionParams);
 
   db.prepare(`UPDATE invoices SET payment_url = ?, stripe_checkout_session_id = ? WHERE id = ?`).run(
     session.url,
@@ -79,6 +90,33 @@ async function buildInvoicePaymentUrl(invoice) {
   );
 
   return session.url;
+}
+
+// يبني رابط "اربط حسابك البنكي" (Stripe Connect Express onboarding) — يُبعث مرة وحدة بالرسالة
+// الترحيبية. خطوة اختيارية: النظام يشتغل بدونها، بس فلوس الفواتير تضل بحساب المنصة لحد ما يكملها.
+async function buildConnectOnboardingUrl(user) {
+  if (!stripe) return null;
+
+  let accountId = user.stripe_connect_account_id;
+  if (!accountId) {
+    const account = await stripe.accounts.create({
+      type: "express",
+      country: process.env.STRIPE_CONNECT_COUNTRY || "SA",
+      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+      metadata: { sanad_user_id: String(user.id) },
+    });
+    accountId = account.id;
+    db.prepare(`UPDATE users SET stripe_connect_account_id = ? WHERE id = ?`).run(accountId, user.id);
+  }
+
+  const accountLink = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${baseUrl()}/connect-bank/refresh`,
+    return_url: `${baseUrl()}/connect-bank/done`,
+    type: "account_onboarding",
+  });
+
+  return accountLink.url;
 }
 
 router.get("/billing", requireAuth, (req, res) => {
@@ -139,6 +177,14 @@ router.get("/pay/cancel", (req, res) => {
   res.send("<h2>تم إلغاء عملية الدفع</h2>");
 });
 
+// صفحات هبوط بعد إكمال (أو انقطاع) نموذج ربط الحساب البنكي — بدون تسجيل دخول، Stripe يفتحها مباشرة
+router.get("/connect-bank/done", (req, res) => {
+  res.send("<h2>تم ✅</h2><p>لو خلصت كل الخطوات، فواتيرك الجاية تروح مباشرة لحسابك البنكي. تقدر تسكر الصفحة والرجوع لواتساب.</p>");
+});
+router.get("/connect-bank/refresh", (req, res) => {
+  res.send("<h2>انتهت صلاحية الرابط</h2><p>ارجع لواتساب واكتب أي رسالة لسند عشان يرسل لك رابط جديد.</p>");
+});
+
 function upsertSubscriptionFromStripe(userId, customerId, subscription) {
   db.prepare(
     `UPDATE subscriptions
@@ -177,7 +223,12 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
   const obj = event.data.object;
 
   try {
-    if (event.type === "checkout.session.completed" && obj.metadata && obj.metadata.sanad_invoice_id) {
+    if (event.type === "account.updated") {
+      db.prepare(`UPDATE users SET stripe_connect_charges_enabled = ? WHERE stripe_connect_account_id = ?`).run(
+        obj.charges_enabled ? 1 : 0,
+        obj.id
+      );
+    } else if (event.type === "checkout.session.completed" && obj.metadata && obj.metadata.sanad_invoice_id) {
       handleInvoicePaid(Number(obj.metadata.sanad_invoice_id)).catch((err) =>
         console.error("خطأ أثناء تحديث فاتورة مدفوعة:", err)
       );
@@ -212,3 +263,4 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
 module.exports = router;
 module.exports.buildSubscriptionCheckoutUrl = buildSubscriptionCheckoutUrl;
 module.exports.buildInvoicePaymentUrl = buildInvoicePaymentUrl;
+module.exports.buildConnectOnboardingUrl = buildConnectOnboardingUrl;
