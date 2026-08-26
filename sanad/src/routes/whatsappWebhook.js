@@ -8,6 +8,7 @@ const { transcribeAudio } = require("../transcribe");
 const { extractInvoice } = require("../extractInvoice");
 const { buildInvoicePaymentUrl, buildSubscriptionCheckoutUrl, buildConnectOnboardingUrl } = require("./billing");
 const { FREE_INVOICE_LIMIT } = require("../config");
+const { detectLanguage, t } = require("../i18n");
 
 function baseUrl() {
   return process.env.APP_BASE_URL || "http://localhost:3000";
@@ -39,43 +40,6 @@ function invoicePageUrl(invoice) {
   return `${baseUrl()}/invoice/${invoice.public_token}`;
 }
 
-function formatInvoiceMessage(invoice, remainingFree) {
-  const amountLine = invoice.amount != null ? `💰 المبلغ: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 المبلغ: (لم يُذكر بوضوح، عدّله من لوحة التحكم)";
-  const customerLine = invoice.customer_name ? `👤 الزبون: ${invoice.customer_name}` : "👤 الزبون: (غير مذكور)";
-
-  const lines = ["✅ سويت لك الفاتورة:", "", customerLine, `📝 الوصف: ${invoice.description || "-"}`, amountLine];
-
-  lines.push("", `🧾 فاتورة ورابط دفع لزبونك: ${invoicePageUrl(invoice)}`);
-
-  lines.push("", "انسخ هذي الرسالة وابعتها لزبونك، أو راجعها من لوحة التحكم.");
-
-  if (remainingFree != null) {
-    lines.push(remainingFree > 0 ? `\n🎁 باقي لك ${remainingFree} فاتورة مجانية.` : "\n🎁 هذي كانت آخر فاتورة من تجربتك المجانية.");
-  }
-
-  return lines.join("\n");
-}
-
-function welcomeMessage(connectUrl) {
-  const lines = [
-    "أهلاً فيك! 👋 هذا بوت *سند* — يحوّل رسالتك الصوتية أو النصية لفاتورة جاهزة فوراً.",
-    "",
-    `أول ${FREE_INVOICE_LIMIT} فواتير (ورابط الدفع فيها) مجانية بالكامل، بدون أي تسجيل.`,
-    "",
-    "جرّب الحين: ابعت رسالة صوتية أو اكتب مثلاً \"سويت صيانة مكيف عند أحمد بمبلغ 250 ريال\".",
-  ];
-
-  if (connectUrl) {
-    lines.push(
-      "",
-      "💳 عشان فلوس فواتيرك تروح لحسابك البنكي مباشرة أول ما يدفع زبونك، اربطه من هنا (٣ دقايق، مرة وحدة بس، اختياري):",
-      connectUrl
-    );
-  }
-
-  return lines.join("\n");
-}
-
 function getOrCreateUserForPhone(from) {
   const existingLink = db.prepare(`SELECT * FROM whatsapp_links WHERE phone_number = ?`).get(from);
   if (existingLink) {
@@ -92,23 +56,21 @@ function getOrCreateUserForPhone(from) {
 
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
-async function processInvoiceMessage(res, user, transcript, source, isNew) {
+async function processInvoiceMessage(res, user, transcript, source, isNew, lang) {
+  const msg = t(lang);
   const invoiceCount = db.prepare(`SELECT COUNT(*) AS n FROM invoices WHERE user_id = ?`).get(user.id).n;
   const sub = db.prepare(`SELECT * FROM subscriptions WHERE user_id = ?`).get(user.id);
   const hasActiveSubscription = sub && ACTIVE_STATUSES.has(sub.status);
 
   if (invoiceCount >= FREE_INVOICE_LIMIT && !hasActiveSubscription) {
-    let checkoutLine = "تواصل معنا لتفعيل اشتراكك.";
+    let checkoutLine = msg.checkoutLineFallback;
     try {
       const url = await buildSubscriptionCheckoutUrl(user);
-      if (url) checkoutLine = `اشترك بضغطة واحدة من هنا:\n${url}`;
+      if (url) checkoutLine = msg.checkoutLineWithUrl(url);
     } catch (err) {
       console.error("فشل إنشاء رابط الاشتراك:", err.message);
     }
-    return reply(
-      res,
-      `🎉 خلصت أول ${FREE_INVOICE_LIMIT} فواتير مجانية!\n\nعشان تكمل تسوي فواتير غير محدودة وتستقبل تذكيرات التحصيل، ${checkoutLine}`
-    );
+    return reply(res, msg.paywall(FREE_INVOICE_LIMIT, checkoutLine));
   }
 
   const extracted = await extractInvoice(transcript);
@@ -141,7 +103,7 @@ async function processInvoiceMessage(res, user, transcript, source, isNew) {
   }
 
   const remainingFree = hasActiveSubscription ? null : Math.max(0, FREE_INVOICE_LIMIT - (invoiceCount + 1));
-  let message = formatInvoiceMessage(invoice, remainingFree);
+  let message = msg.invoice(invoice, remainingFree, invoicePageUrl(invoice));
 
   if (isNew) {
     let connectUrl = null;
@@ -150,7 +112,7 @@ async function processInvoiceMessage(res, user, transcript, source, isNew) {
     } catch (err) {
       console.error("فشل إنشاء رابط ربط الحساب البنكي:", err.message);
     }
-    message = `${welcomeMessage(connectUrl)}\n\n—\n\n${message}\n\n📊 لوحة تحكمك (بدون تسجيل دخول): ${dashboardUrl(user)}`;
+    message = `${msg.welcome(FREE_INVOICE_LIMIT, connectUrl)}\n\n—\n\n${message}\n\n${msg.dashboardLine(dashboardUrl(user))}`;
   }
 
   reply(res, message);
@@ -161,6 +123,8 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
     const from = req.body.From; // "whatsapp:+9665xxxxxxxx"
     const body = (req.body.Body || "").trim();
     const numMedia = Number(req.body.NumMedia || 0);
+    const lang = detectLanguage(body);
+    const msg = t(lang);
 
     if (!from) return res.status(400).send("Missing From");
 
@@ -172,7 +136,7 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
       if (pending) {
         db.prepare(`INSERT OR IGNORE INTO whatsapp_links (user_id, phone_number) VALUES (?, ?)`).run(pending.user_id, from);
         db.prepare(`UPDATE link_codes SET used_at = strftime('%s','now') WHERE id = ?`).run(pending.id);
-        return reply(res, "تم ربط رقمك بنجاح ✅\n\nالحين ابعت رسالة صوتية أو نصية توصف فيها الشغلة اللي سويتها، اسم الزبون (اختياري)، والمبلغ.");
+        return reply(res, msg.linkSuccess);
       }
     }
 
@@ -184,25 +148,28 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
     if (numMedia > 0 && (req.body.MediaContentType0 || "").startsWith("audio")) {
       source = "voice";
       if (!process.env.OPENAI_API_KEY) {
-        return reply(res, "الرسائل الصوتية تحتاج تفعيل خدمة التحويل الصوتي على حسابنا. لحد ذاك، اكتب تفاصيل الشغلة نصياً: اسم الزبون، الوصف، والمبلغ.");
+        return reply(res, msg.voiceNoOpenAI);
       }
       try {
         const { buffer, contentType } = await downloadMedia(req.body.MediaUrl0);
         transcript = await transcribeAudio(buffer, contentType);
       } catch (err) {
         console.error("فشل تحويل الرسالة الصوتية:", err.message);
-        return reply(res, "ما قدرت أفهم الرسالة الصوتية. جرب ترسلها مرة ثانية أو اكتب التفاصيل نصياً.");
+        return reply(res, msg.voiceFailed);
       }
     } else if (body) {
       transcript = body;
     } else {
-      return reply(res, isNew ? welcomeMessage() : "ابعت رسالة صوتية أو نصية فيها تفاصيل الشغلة (اسم الزبون، الوصف، والمبلغ).");
+      return reply(res, isNew ? msg.welcome(FREE_INVOICE_LIMIT, null) : msg.emptyPrompt);
     }
 
-    await processInvoiceMessage(res, user, transcript, source, isNew);
+    // للرسائل الصوتية، نكتشف اللغة من النص المفرّغ نفسه (أدق من نص الرسالة الأصلي اللي غالباً فاضي)
+    const finalLang = source === "voice" ? detectLanguage(transcript) : lang;
+
+    await processInvoiceMessage(res, user, transcript, source, isNew, finalLang);
   } catch (err) {
     console.error("خطأ في معالجة رسالة واتساب:", err);
-    reply(res, "صار خطأ غير متوقع، جرب مرة ثانية بعد شوي.");
+    reply(res, t(detectLanguage(req.body.Body)).unexpectedError);
   }
 });
 

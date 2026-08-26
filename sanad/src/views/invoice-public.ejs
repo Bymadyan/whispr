@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="<%= tr.htmlLang %>" dir="<%= tr.dir %>">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>فاتورة <%= invoiceNumber %> - سند</title>
+<title><%= tr.pageTitle %> <%= invoiceNumber %> - Sanad</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
@@ -27,11 +27,14 @@
   body {
     margin: 0;
     background: var(--page-bg);
-    font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    font-family: <%= lang === 'en' ? '"IBM Plex Sans", "Segoe UI", Tahoma, sans-serif' : '"IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif' %>;
     padding: 48px 16px 80px;
     color: var(--ink);
   }
   .wrap { max-width: 720px; margin: 0 auto; }
+  .lang-switch { text-align: center; margin-bottom: 14px; font-size: 12.5px; }
+  .lang-switch a { color: var(--muted); text-decoration: none; padding: 2px 6px; }
+  .lang-switch a.active { color: var(--accent-ink); font-weight: 700; }
   .invoice {
     background: var(--paper);
     color: var(--ink);
@@ -52,7 +55,7 @@
   }
   .brand-name { font-family: "Cairo", sans-serif; font-weight: 700; font-size: 19px; }
   .brand-tag { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
-  .inv-meta { text-align: left; }
+  .inv-meta { text-align: <%= tr.dir === 'rtl' ? 'left' : 'right' %>; }
   .inv-meta .num { font-family: "Cairo", sans-serif; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
   .inv-meta .date { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
   .status-pill {
@@ -67,17 +70,16 @@
   }
   .party-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
   .party-name { font-size: 15px; font-weight: 600; }
-  .party-sub { font-size: 13px; color: var(--muted); margin-top: 2px; direction: ltr; text-align: right; }
+  .party-sub { font-size: 13px; color: var(--muted); margin-top: 2px; direction: ltr; text-align: <%= tr.dir === 'rtl' ? 'right' : 'left' %>; }
   .inv-items { padding: 8px 36px 0; }
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    text-align: right; font-size: 11.5px; color: var(--muted); font-weight: 700;
+    text-align: <%= tr.dir === 'rtl' ? 'right' : 'left' %>; font-size: 11.5px; color: var(--muted); font-weight: 700;
     letter-spacing: 0.04em; padding: 12px 0 10px; border-bottom: 2px solid var(--line);
   }
-  thead th:last-child { text-align: left; }
+  thead th:last-child { text-align: <%= tr.dir === 'rtl' ? 'left' : 'right' %>; }
   tbody td { padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; vertical-align: top; }
-  tbody td:last-child { text-align: left; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
-  .item-desc-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  tbody td:last-child { text-align: <%= tr.dir === 'rtl' ? 'left' : 'right' %>; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
   .src-tag {
     display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--accent-ink);
     background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; margin-top: 6px;
@@ -109,56 +111,62 @@
   }
   @media (max-width: 560px) {
     .inv-head { flex-direction: column; }
-    .inv-meta { text-align: right; }
+    .inv-meta { text-align: <%= tr.dir === 'rtl' ? 'right' : 'left' %>; }
     .inv-parties { grid-template-columns: 1fr; }
-    .party-sub { text-align: right; }
+    .party-sub { text-align: <%= tr.dir === 'rtl' ? 'right' : 'left' %>; }
     .inv-head, .inv-parties, .inv-items, .inv-totals, .inv-actions, .inv-foot { padding-left: 20px; padding-right: 20px; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="lang-switch">
+    <a href="?lang=ar" class="<%= lang === 'ar' ? 'active' : '' %>">العربية</a>
+    ·
+    <a href="?lang=en" class="<%= lang === 'en' ? 'active' : '' %>">English</a>
+  </div>
+
   <div class="invoice">
     <div class="inv-head">
       <div class="brand">
         <div class="brand-mark">س</div>
         <div>
-          <div class="brand-name">سند</div>
-          <div class="brand-tag">فاتورة خدمة</div>
+          <div class="brand-name">Sanad</div>
+          <div class="brand-tag"><%= tr.invoiceLabel %></div>
         </div>
       </div>
       <div class="inv-meta">
         <div class="num">#<%= invoiceNumber %></div>
         <div class="date"><%= invoiceDate %></div>
         <div class="status-pill <%= invoice.status === 'paid' ? 'paid' : 'unpaid' %>">
-          ● <%= invoice.status === 'paid' ? 'مدفوعة' : 'غير مدفوعة' %>
+          ● <%= invoice.status === 'paid' ? tr.paidStatus : tr.unpaidStatus %>
         </div>
       </div>
     </div>
 
     <div class="inv-parties">
       <div>
-        <div class="party-label">من</div>
+        <div class="party-label"><%= tr.fromLabel %></div>
         <div class="party-name"><%= businessName %></div>
         <% if (businessPhone) { %><div class="party-sub"><%= businessPhone %></div><% } %>
       </div>
       <div>
-        <div class="party-label">إلى</div>
-        <div class="party-name"><%= invoice.customer_name || 'زبون' %></div>
+        <div class="party-label"><%= tr.toLabel %></div>
+        <div class="party-name"><%= invoice.customer_name || tr.unknownCustomer %></div>
         <% if (invoice.customer_phone) { %><div class="party-sub"><%= invoice.customer_phone %></div><% } %>
       </div>
     </div>
 
     <div class="inv-items">
       <table>
-        <thead><tr><th>الوصف</th><th>المبلغ</th></tr></thead>
+        <thead><tr><th><%= tr.descriptionHeader %></th><th><%= tr.amountHeader %></th></tr></thead>
         <tbody>
           <tr>
             <td>
-              <%= invoice.description || 'خدمة' %>
-              <% if (invoice.source === 'voice') { %><div class="src-tag">🎙️ سُجّلت من رسالة صوتية</div><% } %>
+              <%= invoice.description || tr.defaultService %>
+              <% if (invoice.source === 'voice') { %><div class="src-tag"><%= tr.voiceTag %></div><% } %>
             </td>
-            <td><%= invoice.amount != null ? invoice.amount.toFixed(2) : '؟' %> <%= invoice.currency || '' %></td>
+            <td><%= invoice.amount != null ? invoice.amount.toFixed(2) : tr.unknownAmount %> <%= invoice.currency || '' %></td>
           </tr>
         </tbody>
       </table>
@@ -167,27 +175,27 @@
     <div class="inv-totals">
       <div class="totals-box">
         <div class="totals-row grand">
-          <span>الإجمالي</span>
-          <span><%= invoice.amount != null ? invoice.amount.toFixed(2) : '؟' %> <%= invoice.currency || '' %></span>
+          <span><%= tr.totalLabel %></span>
+          <span><%= invoice.amount != null ? invoice.amount.toFixed(2) : tr.unknownAmount %> <%= invoice.currency || '' %></span>
         </div>
       </div>
     </div>
 
     <div class="inv-actions">
       <% if (invoice.status === 'paid') { %>
-        <div class="paid-note">✅ تم استلام الدفع، شكراً لك</div>
+        <div class="paid-note"><%= tr.paidNote %></div>
       <% } else if (invoice.payment_url) { %>
         <a class="pay-btn" href="<%= invoice.payment_url %>">
           <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4H4V6h16v2zM4 18v-6h16v6H4z"/></svg>
-          ادفع الآن<% if (invoice.amount != null) { %> — <%= invoice.amount.toFixed(2) %> <%= invoice.currency || '' %><% } %>
+          <%= tr.payNow %><% if (invoice.amount != null) { %> — <%= invoice.amount.toFixed(2) %> <%= invoice.currency || '' %><% } %>
         </a>
-        <div class="pay-note">دفع آمن عبر بطاقة فيزا / ماستركارد</div>
+        <div class="pay-note"><%= tr.payHint %></div>
       <% } else { %>
-        <div class="pay-note">رابط الدفع غير متوفر لهذي الفاتورة حالياً. تواصل مباشرة مع <%= businessName %>.</div>
+        <div class="pay-note"><%= tr.noPaymentLink(businessName) %></div>
       <% } %>
     </div>
 
-    <div class="inv-foot">صادرة عبر سند</div>
+    <div class="inv-foot"><%= tr.footer %></div>
   </div>
 </div>
 </body>
