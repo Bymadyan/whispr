@@ -37,4 +37,13 @@ router.post("/connect-whatsapp/new-code", requireAuth, (req, res) => {
   res.redirect("/connect-whatsapp");
 });
 
+// يحدّث اسم النشاط اللي يظهر للزبون النهائي بصفحة الفاتورة (بدل "مزوّد الخدمة" العام)
+router.post("/account/business-name", requireAuth, (req, res) => {
+  const businessName = (req.body.businessName || "").trim().slice(0, 120);
+  if (businessName) {
+    db.prepare(`UPDATE users SET business_name = ? WHERE id = ?`).run(businessName, req.user.id);
+  }
+  res.redirect("/dashboard");
+});
+
 module.exports = router;

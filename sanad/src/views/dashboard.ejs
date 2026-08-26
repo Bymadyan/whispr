@@ -16,6 +16,18 @@
   </header>
 
   <div class="container">
+    <div class="accounts">
+      <% if (!user.business_name) { %>
+        <p>📝 خلي زبونك يشوف اسمك الحقيقي بالفاتورة بدل "مزوّد الخدمة":</p>
+      <% } else { %>
+        <p class="muted small">الاسم الظاهر بفواتيرك: <strong><%= user.business_name %></strong></p>
+      <% } %>
+      <form method="POST" action="/account/business-name" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <input type="text" name="businessName" placeholder="اسمك أو اسم نشاطك التجاري" value="<%= user.business_name || '' %>" required style="flex:1; min-width:200px; padding:10px; border-radius:8px; border:1px solid var(--border);" />
+        <button class="btn" type="submit"><%= user.business_name ? 'تحديث' : 'حفظ' %></button>
+      </form>
+    </div>
+
     <% if (!link) { %>
       <div class="accounts">
         <p class="error">رقم واتسابك مو مربوط بعد.</p>

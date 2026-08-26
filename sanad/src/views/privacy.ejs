@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سياسة الخصوصية - سند</title>
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .legal { max-width: 700px; margin: 0 auto; padding: 32px 16px 80px; line-height: 1.9; }
+    .legal h2 { margin-top: 32px; font-size: 18px; }
+    .legal p, .legal li { color: var(--text); font-size: 14.5px; }
+    .legal ul { padding-right: 20px; }
+    .disclaimer { background: #fff7e6; border: 1px solid #f0d9a8; color: #6b4e00; padding: 14px 16px; border-radius: 10px; font-size: 13.5px; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13.5px; }
+    th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1><a href="/" style="color:inherit; text-decoration:none;">سند</a></h1>
+  </header>
+
+  <div class="legal">
+    <div class="disclaimer">
+      ⚠️ هذي نسخة عامة أولية غير مخصصة لأي نظام قانوني محدد. راجعها مع محامٍ مرخّص ببلدك قبل الاعتماد
+      عليها مع عملاء حقيقيين، خصوصاً بخصوص أنظمة حماية البيانات المحلية المعمول فيها.
+    </div>
+
+    <h1>سياسة الخصوصية</h1>
+    <p class="muted small">آخر تحديث: <%= new Date().toLocaleDateString('ar') %></p>
+
+    <h2>1. البيانات اللي نجمعها</h2>
+    <ul>
+      <li>رقم واتسابك، واسم نشاطك لو زودتنا فيه.</li>
+      <li>محتوى رسائلك الصوتية والنصية اللي تبعتها للبوت (تُستخدم فقط لاستخراج بيانات الفاتورة).</li>
+      <li>بيانات الفواتير: اسم ورقم الزبون النهائي، الوصف، المبلغ، حالة الدفع.</li>
+      <li>بيانات الدفع والاشتراك (تُدار بالكامل عبر Stripe، ما نخزن أرقام بطاقات على أنظمتنا).</li>
+    </ul>
+
+    <h2>2. مين يشوف بياناتك (جهات خارجية نستخدمها)</h2>
+    <table>
+      <tr><th>الجهة</th><th>الغرض</th></tr>
+      <tr><td>Twilio</td><td>إرسال واستقبال رسائل واتساب</td></tr>
+      <tr><td>OpenAI (Whisper)</td><td>تحويل الرسائل الصوتية إلى نص</td></tr>
+      <tr><td>Anthropic (Claude)</td><td>استخراج بيانات الفاتورة من النص</td></tr>
+      <tr><td>Stripe</td><td>معالجة الاشتراك ورابط الدفع، وتحويل الفلوس لحسابك البنكي</td></tr>
+    </table>
+    <p>كل جهة من هذي عندها سياسة خصوصية مستقلة تحكم كيف تعالج البيانات اللي تستلمها منا.</p>
+
+    <h2>3. كم مدة نحتفظ ببياناتك</h2>
+    <p>
+      نحتفظ ببيانات حسابك وفواتيرك طالما حسابك فعّال. تقدر تطلب حذف حسابك وبياناته بالتواصل معنا عبر
+      واتساب، وراح نحذفها خلال مدة معقولة إلا لو فيه التزام قانوني (مثل سجلات مالية) يتطلب الاحتفاظ بها
+      فترة أطول.
+    </p>
+
+    <h2>4. أمان الحساب</h2>
+    <p>
+      حسابك اللي يتولد تلقائياً من واتساب ما فيه كلمة مرور — الوصول للوحة تحكمك يتم عبر رابط خاص (magic
+      link) يوصلك على رقم واتسابك المرتبط. لا تشارك هذا الرابط مع أي حد، لأنه يعطي وصول كامل لحسابك.
+    </p>
+
+    <h2>5. حقوقك</h2>
+    <p>تقدر بأي وقت تطلب نسخة من بياناتك، تعديلها، أو حذفها بالكامل بالتواصل معنا عبر رقم واتساب سند.</p>
+
+    <h2>6. التواصل</h2>
+    <p>لأي استفسار حول خصوصية بياناتك، تواصل معنا عبر رقم واتساب سند نفسه.</p>
+  </div>
+</body>
+</html>

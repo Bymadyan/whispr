@@ -47,6 +47,7 @@ app.get("/", (req, res) => {
 
 app.use("/", require("./routes/magicLogin"));
 app.use("/", require("./routes/publicInvoice"));
+app.use("/", require("./routes/legal"));
 app.use("/", require("./routes/auth"));
 app.use("/", require("./routes/account"));
 app.use("/", require("./routes/dashboard"));
