@@ -35,15 +35,17 @@ function dashboardUrl(user) {
   return `${baseUrl()}/d/${user.dashboard_token}`;
 }
 
+function invoicePageUrl(invoice) {
+  return `${baseUrl()}/invoice/${invoice.public_token}`;
+}
+
 function formatInvoiceMessage(invoice, remainingFree) {
   const amountLine = invoice.amount != null ? `💰 المبلغ: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 المبلغ: (لم يُذكر بوضوح، عدّله من لوحة التحكم)";
   const customerLine = invoice.customer_name ? `👤 الزبون: ${invoice.customer_name}` : "👤 الزبون: (غير مذكور)";
 
   const lines = ["✅ سويت لك الفاتورة:", "", customerLine, `📝 الوصف: ${invoice.description || "-"}`, amountLine];
 
-  if (invoice.payment_url) {
-    lines.push("", `💳 رابط دفع مباشر لزبونك: ${invoice.payment_url}`);
-  }
+  lines.push("", `🧾 فاتورة ورابط دفع لزبونك: ${invoicePageUrl(invoice)}`);
 
   lines.push("", "انسخ هذي الرسالة وابعتها لزبونك، أو راجعها من لوحة التحكم.");
 
@@ -110,13 +112,24 @@ async function processInvoiceMessage(res, user, transcript, source, isNew) {
   }
 
   const extracted = await extractInvoice(transcript);
+  const publicToken = crypto.randomBytes(16).toString("hex");
 
   const result = db
     .prepare(
-      `INSERT INTO invoices (user_id, customer_name, customer_phone, description, amount, currency, raw_transcript, source)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO invoices (user_id, customer_name, customer_phone, description, amount, currency, raw_transcript, source, public_token)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
-    .run(user.id, extracted.customer_name, extracted.customer_phone, extracted.description, extracted.amount, extracted.currency, transcript, source);
+    .run(
+      user.id,
+      extracted.customer_name,
+      extracted.customer_phone,
+      extracted.description,
+      extracted.amount,
+      extracted.currency,
+      transcript,
+      source,
+      publicToken
+    );
 
   let invoice = db.prepare(`SELECT * FROM invoices WHERE id = ?`).get(result.lastInsertRowid);
 

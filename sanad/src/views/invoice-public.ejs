@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>فاتورة <%= invoiceNumber %> - سند</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #EEF2F0;
+    --ink: #14231F;
+    --muted: #6B7C77;
+    --accent: #0D9488;
+    --accent-ink: #0B3B36;
+    --accent-soft: #E3F5F2;
+    --paper: #FFFFFF;
+    --paper-border: #E3E8E6;
+    --line: #ECEFED;
+    --pill-unpaid-bg: #FDF3E7;
+    --pill-unpaid-ink: #A15C00;
+    --pill-paid-bg: #E7F8ED;
+    --pill-paid-ink: #14804A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+    padding: 48px 16px 80px;
+    color: var(--ink);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .invoice {
+    background: var(--paper);
+    color: var(--ink);
+    border: 1px solid var(--paper-border);
+    border-radius: 18px;
+    box-shadow: 0 24px 48px -24px rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+  .inv-head {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 32px 36px 24px; border-bottom: 1px solid var(--line); gap: 20px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark {
+    width: 40px; height: 40px; border-radius: 11px; background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Cairo", sans-serif; font-weight: 800; font-size: 18px; flex-shrink: 0;
+  }
+  .brand-name { font-family: "Cairo", sans-serif; font-weight: 700; font-size: 19px; }
+  .brand-tag { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .inv-meta { text-align: left; }
+  .inv-meta .num { font-family: "Cairo", sans-serif; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .inv-meta .date { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 999px; margin-top: 10px;
+  }
+  .status-pill.unpaid { background: var(--pill-unpaid-bg); color: var(--pill-unpaid-ink); }
+  .status-pill.paid { background: var(--pill-paid-bg); color: var(--pill-paid-ink); }
+  .inv-parties {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    padding: 24px 36px; border-bottom: 1px solid var(--line);
+  }
+  .party-label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 6px; }
+  .party-name { font-size: 15px; font-weight: 600; }
+  .party-sub { font-size: 13px; color: var(--muted); margin-top: 2px; direction: ltr; text-align: right; }
+  .inv-items { padding: 8px 36px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: right; font-size: 11.5px; color: var(--muted); font-weight: 700;
+    letter-spacing: 0.04em; padding: 12px 0 10px; border-bottom: 2px solid var(--line);
+  }
+  thead th:last-child { text-align: left; }
+  tbody td { padding: 16px 0; border-bottom: 1px solid var(--line); font-size: 14.5px; vertical-align: top; }
+  tbody td:last-child { text-align: left; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .item-desc-sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .src-tag {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--accent-ink);
+    background: var(--accent-soft); padding: 2px 8px; border-radius: 6px; margin-top: 6px;
+  }
+  .inv-totals { padding: 18px 36px 8px; display: flex; justify-content: flex-end; }
+  .totals-box { width: 240px; }
+  .totals-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--muted); padding: 5px 0; }
+  .totals-row.grand {
+    border-top: 1px solid var(--line); margin-top: 6px; padding-top: 12px;
+    font-size: 18px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .totals-row.grand span:last-child { color: var(--accent-ink); }
+  .inv-actions { padding: 24px 36px 32px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .pay-btn {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: #fff;
+    font-family: "Cairo", sans-serif; font-weight: 700; font-size: 15px;
+    padding: 13px 34px; border-radius: 12px; text-decoration: none;
+    box-shadow: 0 10px 22px -8px rgba(13,148,136,0.55); border: none; cursor: pointer;
+  }
+  .pay-btn svg { width: 16px; height: 16px; fill: #fff; }
+  .paid-note {
+    display: inline-flex; align-items: center; gap: 8px; color: var(--pill-paid-ink);
+    font-family: "Cairo", sans-serif; font-weight: 700; font-size: 15px;
+  }
+  .pay-note { font-size: 12px; color: var(--muted); }
+  .inv-foot {
+    background: #FAFBFA; border-top: 1px solid var(--line); padding: 16px 36px;
+    text-align: center; font-size: 11.5px; color: var(--muted);
+  }
+  @media (max-width: 560px) {
+    .inv-head { flex-direction: column; }
+    .inv-meta { text-align: right; }
+    .inv-parties { grid-template-columns: 1fr; }
+    .party-sub { text-align: right; }
+    .inv-head, .inv-parties, .inv-items, .inv-totals, .inv-actions, .inv-foot { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="invoice">
+    <div class="inv-head">
+      <div class="brand">
+        <div class="brand-mark">س</div>
+        <div>
+          <div class="brand-name">سند</div>
+          <div class="brand-tag">فاتورة خدمة</div>
+        </div>
+      </div>
+      <div class="inv-meta">
+        <div class="num">#<%= invoiceNumber %></div>
+        <div class="date"><%= invoiceDate %></div>
+        <div class="status-pill <%= invoice.status === 'paid' ? 'paid' : 'unpaid' %>">
+          ● <%= invoice.status === 'paid' ? 'مدفوعة' : 'غير مدفوعة' %>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-parties">
+      <div>
+        <div class="party-label">من</div>
+        <div class="party-name"><%= businessName %></div>
+        <% if (businessPhone) { %><div class="party-sub"><%= businessPhone %></div><% } %>
+      </div>
+      <div>
+        <div class="party-label">إلى</div>
+        <div class="party-name"><%= invoice.customer_name || 'زبون' %></div>
+        <% if (invoice.customer_phone) { %><div class="party-sub"><%= invoice.customer_phone %></div><% } %>
+      </div>
+    </div>
+
+    <div class="inv-items">
+      <table>
+        <thead><tr><th>الوصف</th><th>المبلغ</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>
+              <%= invoice.description || 'خدمة' %>
+              <% if (invoice.source === 'voice') { %><div class="src-tag">🎙️ سُجّلت من رسالة صوتية</div><% } %>
+            </td>
+            <td><%= invoice.amount != null ? invoice.amount.toFixed(2) : '؟' %> <%= invoice.currency || '' %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="inv-totals">
+      <div class="totals-box">
+        <div class="totals-row grand">
+          <span>الإجمالي</span>
+          <span><%= invoice.amount != null ? invoice.amount.toFixed(2) : '؟' %> <%= invoice.currency || '' %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-actions">
+      <% if (invoice.status === 'paid') { %>
+        <div class="paid-note">✅ تم استلام الدفع، شكراً لك</div>
+      <% } else if (invoice.payment_url) { %>
+        <a class="pay-btn" href="<%= invoice.payment_url %>">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2zm0 4H4V6h16v2zM4 18v-6h16v6H4z"/></svg>
+          ادفع الآن<% if (invoice.amount != null) { %> — <%= invoice.amount.toFixed(2) %> <%= invoice.currency || '' %><% } %>
+        </a>
+        <div class="pay-note">دفع آمن عبر بطاقة فيزا / ماستركارد</div>
+      <% } else { %>
+        <div class="pay-note">رابط الدفع غير متوفر لهذي الفاتورة حالياً. تواصل مباشرة مع <%= businessName %>.</div>
+      <% } %>
+    </div>
+
+    <div class="inv-foot">صادرة عبر سند</div>
+  </div>
+</div>
+</body>
+</html>

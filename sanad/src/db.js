@@ -67,6 +67,7 @@ db.exec(`
     source TEXT NOT NULL DEFAULT 'text', -- text | voice
     payment_url TEXT,
     stripe_checkout_session_id TEXT,
+    public_token TEXT NOT NULL UNIQUE, -- يفتح صفحة الفاتورة العامة (/invoice/:token) بدون تسجيل دخول
     reminder_sent_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))

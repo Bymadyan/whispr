@@ -65,7 +65,7 @@
             <p><strong><%= inv.amount != null ? inv.amount : '؟' %> <%= inv.currency || '' %></strong></p>
             <p class="muted small"><%= new Date(inv.created_at * 1000).toLocaleString('ar') %> · <%= inv.source === 'voice' ? '🎙️ صوتي' : '⌨️ نصي' %></p>
             <% if (inv.payment_url) { %>
-              <p class="small"><a href="<%= inv.payment_url %>" target="_blank" rel="noopener">💳 رابط الدفع</a></p>
+              <p class="small"><a href="/invoice/<%= inv.public_token %>" target="_blank" rel="noopener">🧾 فاتورة الزبون</a></p>
             <% } %>
           </div>
           <div>
