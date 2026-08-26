@@ -5,6 +5,7 @@ const stripe = require("../stripeClient");
 const { requireAuth } = require("../middleware");
 const { normalizeCurrency, PLATFORM_FEE_PERCENT } = require("../config");
 const { sendMessage } = require("../whatsapp");
+const { t } = require("../i18n");
 
 function baseUrl() {
   return process.env.APP_BASE_URL || "http://localhost:3000";
@@ -205,10 +206,41 @@ async function handleInvoicePaid(invoiceId) {
   db.prepare(`UPDATE invoices SET status = 'paid', updated_at = strftime('%s','now') WHERE id = ?`).run(invoiceId);
 
   const link = db.prepare(`SELECT * FROM whatsapp_links WHERE user_id = ?`).get(invoice.user_id);
+  const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(invoice.user_id);
   if (link) {
-    const who = invoice.customer_name || "الزبون";
-    await sendMessage(link.phone_number, `💰 استلمت دفعة! ${who} دفع فاتورة بمبلغ ${invoice.amount} ${invoice.currency || ""}`.trim());
+    const msg = t(user ? user.preferred_language : "ar");
+    await sendMessage(link.phone_number, msg.paymentReceived(invoice.customer_name || "-", invoice.amount, invoice.currency || ""));
   }
+}
+
+// لما تحويل بنكي فعلي يصل (أو يفشل) لحساب Connect الخاص بالحرفي — يوصلنا كـevent على حساب الحرفي
+// نفسه، مو حساب المنصة، فنحتاج نربطه برقم واتسابه عن طريق stripe_connect_account_id
+async function handleConnectedAccountEvent(event) {
+  const connectedAccountId = event.account;
+  if (!connectedAccountId) return;
+
+  if (event.type === "account.updated") {
+    db.prepare(`UPDATE users SET stripe_connect_charges_enabled = ? WHERE stripe_connect_account_id = ?`).run(
+      event.data.object.charges_enabled ? 1 : 0,
+      connectedAccountId
+    );
+    return;
+  }
+
+  if (event.type !== "payout.paid" && event.type !== "payout.failed") return;
+
+  const user = db.prepare(`SELECT * FROM users WHERE stripe_connect_account_id = ?`).get(connectedAccountId);
+  if (!user) return;
+
+  const link = db.prepare(`SELECT * FROM whatsapp_links WHERE user_id = ?`).get(user.id);
+  if (!link) return;
+
+  const payout = event.data.object;
+  const amount = (payout.amount / 100).toFixed(2);
+  const currency = (payout.currency || "").toUpperCase();
+  const msg = t(user.preferred_language);
+
+  await sendMessage(link.phone_number, event.type === "payout.paid" ? msg.payoutArrived(amount, currency) : msg.payoutFailed(amount, currency));
 }
 
 router.post("/billing/webhook", express.raw({ type: "application/json" }), (req, res) => {
@@ -227,12 +259,7 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
   const obj = event.data.object;
 
   try {
-    if (event.type === "account.updated") {
-      db.prepare(`UPDATE users SET stripe_connect_charges_enabled = ? WHERE stripe_connect_account_id = ?`).run(
-        obj.charges_enabled ? 1 : 0,
-        obj.id
-      );
-    } else if (event.type === "checkout.session.completed" && obj.metadata && obj.metadata.sanad_invoice_id) {
+    if (event.type === "checkout.session.completed" && obj.metadata && obj.metadata.sanad_invoice_id) {
       handleInvoicePaid(Number(obj.metadata.sanad_invoice_id)).catch((err) =>
         console.error("خطأ أثناء تحديث فاتورة مدفوعة:", err)
       );
@@ -260,6 +287,27 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
   } catch (err) {
     console.error("Error handling Stripe webhook:", err);
   }
+
+  res.json({ received: true });
+});
+
+// Webhook منفصل مخصص لأحداث حسابات الحرفيين المرتبطة (Connect) — account.updated وpayout.paid/failed
+// تصل هنا لأنها Scoped على "Connected accounts" بلوحة Stripe، مو "Your account" مثل الـwebhook أعلاه.
+// راجع README لخطوات إنشاء هذا الـendpoint بلوحة Stripe.
+router.post("/billing/webhook/connect", express.raw({ type: "application/json" }), (req, res) => {
+  if (!stripe || !process.env.STRIPE_CONNECT_WEBHOOK_SECRET) {
+    return res.status(500).send("Connect webhook not configured");
+  }
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.headers["stripe-signature"], process.env.STRIPE_CONNECT_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error("Stripe Connect webhook signature verification failed:", err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  handleConnectedAccountEvent(event).catch((err) => console.error("Error handling Stripe Connect webhook:", err));
 
   res.json({ received: true });
 });

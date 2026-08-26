@@ -22,6 +22,7 @@ db.exec(`
     dashboard_token TEXT NOT NULL UNIQUE,
     stripe_connect_account_id TEXT,
     stripe_connect_charges_enabled INTEGER NOT NULL DEFAULT 0,
+    preferred_language TEXT NOT NULL DEFAULT 'ar', -- آخر لغة اكتُشفت من رسائله، تُستخدم للإشعارات اللي ما فيها رسالة واردة (دفعة استُلمت، تذكير، تحويل بنكي)
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 

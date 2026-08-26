@@ -1,9 +1,17 @@
-// دعم لغتين لمحادثة واتساب: نكتشف اللغة من نص رسالة المستخدم نفسها (واتساب/Twilio ما يعطينا لغة
-// الجهاز مباشرة). أي نص فيه حرف عربي واحد على الأقل يُعتبر عربي، غير كذا إنجليزي.
-// إضافة لغة جديدة لاحقاً = تضيف مفتاح جديد بـ BOT_MESSAGES وتوسّع detectLanguage.
+// دعم عدة لغات لمحادثة واتساب. واتساب/Twilio ما يعطينا لغة جهاز المستخدم مباشرة، فنكتشفها من نص
+// رسالته نفسها:
+//   - ما فيه أي حرف بنطاق الحروف العربية (يشمل الأوردو، لأن الأوردو مكتوب بخط عربي مطوّر) => إنجليزي.
+//   - فيه حروف عربية، وفيها حروف مختصة بالأوردو (پ چ ڈ ڑ ژ گ ں ھ ے) => أوردو.
+//   - غير كذا => عربي.
+// إضافة لغة جديدة لاحقاً = تضيف مفتاح جديد بـ BOT_MESSAGES و PAGE_TEXT وتوسّع detectLanguage.
+
+const ARABIC_SCRIPT = /[؀-ۿ]/;
+const URDU_MARKERS = /[پچڈڑژگںھے]/;
 
 function detectLanguage(text) {
-  return /[؀-ۿ]/.test(text || "") ? "ar" : "en";
+  if (!text) return "ar";
+  if (!ARABIC_SCRIPT.test(text)) return "en";
+  return URDU_MARKERS.test(text) ? "ur" : "ar";
 }
 
 const BOT_MESSAGES = {
@@ -53,6 +61,10 @@ const BOT_MESSAGES = {
     voiceFailed: "ما قدرت أفهم الرسالة الصوتية. جرب ترسلها مرة ثانية أو اكتب التفاصيل نصياً.",
     emptyPrompt: "ابعت رسالة صوتية أو نصية فيها تفاصيل الشغلة (اسم الزبون، الوصف، والمبلغ).",
     unexpectedError: "صار خطأ غير متوقع، جرب مرة ثانية بعد شوي.",
+    paymentReceived: (who, amount, currency) => `💰 استلمت دفعة! ${who} دفع فاتورة بمبلغ ${amount} ${currency}`.trim(),
+    payoutArrived: (amount, currency) => `✅ التحويل البنكي وصل حسابك! المبلغ: ${amount} ${currency}`.trim(),
+    payoutFailed: (amount, currency) => `⚠️ فشل تحويل بنكي بمبلغ ${amount} ${currency} لحسابك. راجع بيانات حسابك البنكي بإعدادات Stripe أو تواصل مع الدعم.`.trim(),
+    reminder: (who, amount, days) => `⏰ تذكير: فاتورة "${who}" بمبلغ ${amount} لسه ما انسددت من أكثر من ${days} أيام. تحب تتابعها؟`,
   },
 
   en: {
@@ -101,6 +113,62 @@ const BOT_MESSAGES = {
     voiceFailed: "I couldn't understand that voice message. Try sending it again or type the details instead.",
     emptyPrompt: "Send a voice note or text with the job details (customer name, description, and amount).",
     unexpectedError: "Something went wrong. Please try again in a moment.",
+    paymentReceived: (who, amount, currency) => `💰 Payment received! ${who} paid an invoice for ${amount} ${currency}`.trim(),
+    payoutArrived: (amount, currency) => `✅ Your bank transfer arrived! Amount: ${amount} ${currency}`.trim(),
+    payoutFailed: (amount, currency) => `⚠️ A bank transfer of ${amount} ${currency} to your account failed. Check your bank details in Stripe or contact support.`.trim(),
+    reminder: (who, amount, days) => `⏰ Reminder: invoice "${who}" for ${amount} is still unpaid after more than ${days} days. Want to follow up?`,
+  },
+
+  ur: {
+    welcome: (limit, connectUrl) => {
+      const lines = [
+        "ہیلو! 👋 یہ ہے *سند* بوٹ — آپ کا وائس نوٹ یا ٹیکسٹ فوری طور پر ایک تیار انوائس میں بدل دیتا ہے۔",
+        "",
+        `آپ کے پہلے ${limit} انوائسز (پیمنٹ لنک کے ساتھ) بالکل مفت ہیں، بغیر کسی رجسٹریشن کے۔`,
+        "",
+        'ابھی آزمائیں: ایک وائس میسج بھیجیں یا لکھیں مثلاً "احمد کے گھر AC ٹھیک کیا 250 ریال میں"۔',
+      ];
+      if (connectUrl) {
+        lines.push(
+          "",
+          "💳 تاکہ آپ کے انوائس کی رقم سیدھا آپ کے بینک اکاؤنٹ میں جائے جیسے ہی کسٹمر ادائیگی کرے، اسے یہاں سے جوڑیں (3 منٹ، ایک بار، اختیاری):",
+          connectUrl
+        );
+      }
+      return lines.join("\n");
+    },
+    invoice: (invoice, remainingFree, pageUrl) => {
+      const amountLine = invoice.amount != null ? `💰 رقم: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 رقم: (واضح نہیں، ڈیش بورڈ سے درست کریں)";
+      const customerLine = invoice.customer_name ? `👤 کسٹمر: ${invoice.customer_name}` : "👤 کسٹمر: (نامعلوم)";
+      const lines = [
+        "✅ آپ کا انوائس تیار ہے:",
+        "",
+        customerLine,
+        `📝 تفصیل: ${invoice.description || "-"}`,
+        amountLine,
+        "",
+        `🧾 آپ کے کسٹمر کے لیے انوائس اور پیمنٹ لنک: ${pageUrl}`,
+        "",
+        "یہ کاپی کریں اور اپنے کسٹمر کو بھیجیں، یا ڈیش بورڈ سے دیکھیں۔",
+      ];
+      if (remainingFree != null) {
+        lines.push(remainingFree > 0 ? `\n🎁 ${remainingFree} مفت انوائس باقی ہیں۔` : "\n🎁 یہ آپ کا آخری مفت انوائس تھا۔");
+      }
+      return lines.join("\n");
+    },
+    dashboardLine: (url) => `📊 آپ کا ڈیش بورڈ (لاگ ان کی ضرورت نہیں): ${url}`,
+    paywall: (limit, checkoutLine) => `🎉 آپ نے اپنے پہلے ${limit} مفت انوائسز استعمال کر لیے!\n\nغیر محدود انوائسز اور ادائیگی کی یاد دہانی کے لیے، ${checkoutLine}`,
+    checkoutLineFallback: "اپنی سبسکرپشن فعال کرنے کے لیے ہم سے رابطہ کریں۔",
+    checkoutLineWithUrl: (url) => `یہاں سے ایک کلک میں سبسکرائب کریں:\n${url}`,
+    linkSuccess: "آپ کا نمبر کامیابی سے جڑ گیا ✅\n\nاب کام کی تفصیل، کسٹمر کا نام (اختیاری)، اور رقم کے ساتھ ایک وائس میسج یا ٹیکسٹ بھیجیں۔",
+    voiceNoOpenAI: "وائس میسجز کے لیے ہمارے سسٹم پر ٹرانسکرپشن فعال ہونا ضروری ہے۔ تب تک براہ کرم تفصیلات لکھیں: کسٹمر کا نام، تفصیل، اور رقم۔",
+    voiceFailed: "یہ وائس میسج سمجھ نہیں آیا۔ دوبارہ بھیجیں یا تفصیلات لکھیں۔",
+    emptyPrompt: "کام کی تفصیلات کے ساتھ ایک وائس میسج یا ٹیکسٹ بھیجیں (کسٹمر کا نام، تفصیل، اور رقم)۔",
+    unexpectedError: "کچھ غلط ہو گیا۔ تھوڑی دیر بعد دوبارہ کوشش کریں۔",
+    paymentReceived: (who, amount, currency) => `💰 ادائیگی موصول ہوئی! ${who} نے ${amount} ${currency} کا انوائس ادا کیا`.trim(),
+    payoutArrived: (amount, currency) => `✅ آپ کا بینک ٹرانسفر پہنچ گیا! رقم: ${amount} ${currency}`.trim(),
+    payoutFailed: (amount, currency) => `⚠️ ${amount} ${currency} کا بینک ٹرانسفر ناکام ہو گیا۔ Stripe میں اپنی بینک تفصیلات چیک کریں یا سپورٹ سے رابطہ کریں۔`.trim(),
+    reminder: (who, amount, days) => `⏰ یاد دہانی: انوائس "${who}" بمبلغ ${amount} ${days} دن سے زیادہ سے ادا نہیں ہوا۔ پیروی کرنا چاہیں گے؟`,
   },
 };
 
@@ -156,12 +224,38 @@ const PAGE_TEXT = {
     footer: "Issued via Sanad",
     unknownAmount: "?",
   },
+  ur: {
+    dir: "rtl",
+    htmlLang: "ur",
+    pageTitle: "انوائس",
+    fromLabel: "کی طرف سے",
+    toLabel: "بنام",
+    invoiceLabel: "سروس انوائس",
+    descriptionHeader: "تفصیل",
+    amountHeader: "رقم",
+    totalLabel: "کل رقم",
+    paidStatus: "ادا شدہ",
+    unpaidStatus: "غیر ادا شدہ",
+    unknownCustomer: "کسٹمر",
+    defaultService: "سروس",
+    serviceProvider: "سروس فراہم کنندہ",
+    voiceTag: "🎙️ وائس میسج سے ریکارڈ کیا گیا",
+    payNow: "ابھی ادائیگی کریں",
+    paidNote: "✅ ادائیگی موصول ہو گئی، شکریہ",
+    payHint: "ویزا / ماسٹرکارڈ کے ذریعے محفوظ ادائیگی",
+    noPaymentLink: (name) => `اس انوائس کے لیے ابھی پیمنٹ لنک دستیاب نہیں۔ براہ راست ${name} سے رابطہ کریں۔`,
+    footer: "سند کے ذریعے جاری کیا گیا",
+    unknownAmount: "؟",
+  },
 };
 
 // يقرأ ترويسة Accept-Language اللي يرسلها المتصفح تلقائياً (تعكس لغة الجهاز غالباً) ويرجع أقرب لغة مدعومة
 function detectPageLanguage(acceptLanguageHeader) {
   if (!acceptLanguageHeader) return "ar";
-  return /^en/i.test(acceptLanguageHeader.split(",")[0].trim()) ? "en" : "ar";
+  const primary = acceptLanguageHeader.split(",")[0].trim().toLowerCase();
+  if (primary.startsWith("en")) return "en";
+  if (primary.startsWith("ur")) return "ur";
+  return "ar";
 }
 
 function pageText(lang) {

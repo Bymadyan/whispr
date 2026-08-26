@@ -1,9 +1,10 @@
 // تذكير دوري بسيط: كل ساعة، يبعت لصاحب العمل (مو للزبون) تذكير بالفواتير اللي لسه ما انسددت
 // من أكثر من 3 أيام وما أُرسل تذكير عنها من قبل. يحتاج قالب رسالة معتمد من واتساب لو مرّ أكثر
-// من 24 ساعة على آخر رسالة من صاحب العمل (راجع تنبيه README).
+// من 24 ساعة على آخر رسالة من صاحب العمل (راجع WHATSAPP-TEMPLATE.md).
 
 const db = require("./db");
 const { sendMessage } = require("./whatsapp");
+const { t } = require("./i18n");
 
 const CHECK_INTERVAL_MS = 60 * 60 * 1000; // كل ساعة
 const REMINDER_AFTER_DAYS = 3;
@@ -13,9 +14,10 @@ async function checkAndSendReminders() {
 
   const dueInvoices = db
     .prepare(
-      `SELECT i.*, w.phone_number
+      `SELECT i.*, w.phone_number, u.preferred_language
        FROM invoices i
        JOIN whatsapp_links w ON w.user_id = i.user_id
+       JOIN users u ON u.id = i.user_id
        WHERE i.status = 'unpaid'
          AND i.created_at < ?
          AND (i.reminder_sent_at IS NULL OR i.reminder_sent_at < ?)`
@@ -23,10 +25,11 @@ async function checkAndSendReminders() {
     .all(cutoff, cutoff);
 
   for (const invoice of dueInvoices) {
-    const who = invoice.customer_name || "زبون بدون اسم";
-    const amount = invoice.amount != null ? `${invoice.amount} ${invoice.currency || ""}`.trim() : "مبلغ غير محدد";
+    const msg = t(invoice.preferred_language);
+    const who = invoice.customer_name || "-";
+    const amount = invoice.amount != null ? `${invoice.amount} ${invoice.currency || ""}`.trim() : "?";
     try {
-      await sendMessage(invoice.phone_number, `⏰ تذكير: فاتورة "${who}" بمبلغ ${amount} لسه ما انسددت من أكثر من ${REMINDER_AFTER_DAYS} أيام. تحب تتابعها؟`);
+      await sendMessage(invoice.phone_number, msg.reminder(who, amount, REMINDER_AFTER_DAYS));
       db.prepare(`UPDATE invoices SET reminder_sent_at = strftime('%s','now') WHERE id = ?`).run(invoice.id);
     } catch (err) {
       console.error(`فشل إرسال تذكير للفاتورة #${invoice.id}:`, err.message);

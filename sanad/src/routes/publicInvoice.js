@@ -10,8 +10,9 @@ router.get("/invoice/:token", (req, res) => {
   const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(invoice.user_id);
   const link = db.prepare(`SELECT * FROM whatsapp_links WHERE user_id = ?`).get(invoice.user_id);
 
-  // ?lang=en تفضّل على لغة المتصفح (زر التبديل اليدوي بالصفحة يستخدمها)
-  const lang = req.query.lang === "en" || req.query.lang === "ar" ? req.query.lang : detectPageLanguage(req.headers["accept-language"]);
+  // ?lang= يفضّل على لغة المتصفح (زر التبديل اليدوي بالصفحة يستخدمها)
+  const SUPPORTED_LANGS = ["ar", "en", "ur"];
+  const lang = SUPPORTED_LANGS.includes(req.query.lang) ? req.query.lang : detectPageLanguage(req.headers["accept-language"]);
 
   res.render("invoice-public", {
     invoice,

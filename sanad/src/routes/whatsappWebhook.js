@@ -166,6 +166,10 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
     // للرسائل الصوتية، نكتشف اللغة من النص المفرّغ نفسه (أدق من نص الرسالة الأصلي اللي غالباً فاضي)
     const finalLang = source === "voice" ? detectLanguage(transcript) : lang;
 
+    // نحفظ آخر لغة مكتشفة لاستخدامها لاحقاً بالإشعارات اللي ما فيها رسالة واردة نكتشف منها اللغة
+    // (تنبيه دفعة استُلمت، تذكير تحصيل، تأكيد تحويل بنكي)
+    db.prepare(`UPDATE users SET preferred_language = ? WHERE id = ?`).run(finalLang, user.id);
+
     await processInvoiceMessage(res, user, transcript, source, isNew, finalLang);
   } catch (err) {
     console.error("خطأ في معالجة رسالة واتساب:", err);
