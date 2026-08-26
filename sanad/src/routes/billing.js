@@ -77,10 +77,11 @@ async function buildInvoicePaymentUrl(invoice, user) {
   };
 
   if (user && user.stripe_connect_charges_enabled && user.stripe_connect_account_id) {
-    // on_behalf_of يخلي رسوم معالجة Stripe نفسها تُخصم من حساب الحرفي (المُحوَّل له)، مو من حساب
-    // المنصة — عشان عمولتنا (application_fee_amount) تضل صافية بالكامل بدون ما نتحمل أي تكلفة معالجة.
+    // بدون on_behalf_of عمداً: رسوم معالجة Stripe نفسها تُخصم من حساب المنصة (منّا)، مو من الحرفي.
+    // الحرفي يستلم بالضبط (مبلغ الفاتورة − application_fee_amount) بدون أي خصم إضافي يشوفه بحسابه —
+    // نسبة PLATFORM_FEE_PERCENT محسوبة أصلاً لتغطي رسوم المعالجة + السحب البنكي من داخلها بهامش مريح،
+    // عشان الرقم المعلن للحرفي يطابق بالضبط الخصم الفعلي اللي يشوفه، بدون مفاجآت لاحقة.
     sessionParams.payment_intent_data = {
-      on_behalf_of: user.stripe_connect_account_id,
       transfer_data: { destination: user.stripe_connect_account_id },
       application_fee_amount: Math.round((amountInCents * PLATFORM_FEE_PERCENT) / 100),
     };
