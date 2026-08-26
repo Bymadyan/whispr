@@ -109,6 +109,9 @@ async function buildConnectOnboardingUrl(user) {
       country: process.env.STRIPE_CONNECT_COUNTRY || "SA",
       capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
       metadata: { sanad_user_id: String(user.id) },
+      // جدول سحب أسبوعي بدل اليومي الافتراضي — يقلل عدد رسوم السحب البنكي (0.25%+0.25$ لكل سحبة)
+      // بشكل كبير بدون ما يأخر وصول فلوس الحرفي كثير. الحرفي ما يحتاج يعدّل أي شي بنفسه.
+      settings: { payouts: { schedule: { interval: "weekly", weekly_anchor: "monday" } } },
     });
     accountId = account.id;
     db.prepare(`UPDATE users SET stripe_connect_account_id = ? WHERE id = ?`).run(accountId, user.id);
