@@ -16,11 +16,11 @@ function detectLanguage(text) {
 
 const BOT_MESSAGES = {
   ar: {
-    welcome: (limit, connectUrl) => {
+    welcome: (connectUrl) => {
       const lines = [
-        "أهلاً فيك! 👋 هذا بوت *سند* — يحوّل رسالتك الصوتية أو النصية لفاتورة جاهزة فوراً.",
+        "أهلاً فيك! 👋 هذا بوت *سند* — يحوّل رسالتك الصوتية أو النصية لفاتورة جاهزة فوراً، برابط دفع لزبونك.",
         "",
-        `أول ${limit} فواتير (ورابط الدفع فيها) مجانية بالكامل، بدون أي تسجيل.`,
+        "الاستخدام مجاني بالكامل، بدون اشتراك ولا تسجيل — بس عمولة 5% لما زبونك يدفع فعلاً عبر الرابط (0% لو ما فيه دفع).",
         "",
         'جرّب الحين: ابعت رسالة صوتية أو اكتب مثلاً "سويت صيانة مكيف عند أحمد بمبلغ 250 ريال".',
       ];
@@ -33,7 +33,7 @@ const BOT_MESSAGES = {
       }
       return lines.join("\n");
     },
-    invoice: (invoice, remainingFree, pageUrl) => {
+    invoice: (invoice, pageUrl) => {
       const amountLine = invoice.amount != null ? `💰 المبلغ: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 المبلغ: (لم يُذكر بوضوح، عدّله من لوحة التحكم)";
       const customerLine = invoice.customer_name ? `👤 الزبون: ${invoice.customer_name}` : "👤 الزبون: (غير مذكور)";
       const lines = [
@@ -47,15 +47,9 @@ const BOT_MESSAGES = {
         "",
         "انسخ هذي الرسالة وابعتها لزبونك، أو راجعها من لوحة التحكم.",
       ];
-      if (remainingFree != null) {
-        lines.push(remainingFree > 0 ? `\n🎁 باقي لك ${remainingFree} فاتورة مجانية.` : "\n🎁 هذي كانت آخر فاتورة من تجربتك المجانية.");
-      }
       return lines.join("\n");
     },
     dashboardLine: (url) => `📊 لوحة تحكمك (بدون تسجيل دخول): ${url}`,
-    paywall: (limit, checkoutLine) => `🎉 خلصت أول ${limit} فواتير مجانية!\n\nعشان تكمل تسوي فواتير غير محدودة وتستقبل تذكيرات التحصيل، ${checkoutLine}`,
-    checkoutLineFallback: "تواصل معنا لتفعيل اشتراكك.",
-    checkoutLineWithUrl: (url) => `اشترك بضغطة واحدة من هنا:\n${url}`,
     linkSuccess: "تم ربط رقمك بنجاح ✅\n\nالحين ابعت رسالة صوتية أو نصية توصف فيها الشغلة اللي سويتها، اسم الزبون (اختياري)، والمبلغ.",
     voiceNoOpenAI: "الرسائل الصوتية تحتاج تفعيل خدمة التحويل الصوتي على حسابنا. لحد ذاك، اكتب تفاصيل الشغلة نصياً: اسم الزبون، الوصف، والمبلغ.",
     voiceFailed: "ما قدرت أفهم الرسالة الصوتية. جرب ترسلها مرة ثانية أو اكتب التفاصيل نصياً.",
@@ -68,11 +62,11 @@ const BOT_MESSAGES = {
   },
 
   en: {
-    welcome: (limit, connectUrl) => {
+    welcome: (connectUrl) => {
       const lines = [
-        "Hey! 👋 This is *Sanad* — it turns your voice note or text into a ready invoice instantly.",
+        "Hey! 👋 This is *Sanad* — it turns your voice note or text into a ready invoice instantly, with a payment link for your customer.",
         "",
-        `Your first ${limit} invoices (with a payment link) are completely free, no sign-up needed.`,
+        "It's completely free to use, no subscription and no sign-up — we just take a 5% fee when your customer actually pays through the link (0% if there's no payment).",
         "",
         'Try it now: send a voice note or type something like "Fixed the AC at Ahmad\'s place for 250 SAR".',
       ];
@@ -85,7 +79,7 @@ const BOT_MESSAGES = {
       }
       return lines.join("\n");
     },
-    invoice: (invoice, remainingFree, pageUrl) => {
+    invoice: (invoice, pageUrl) => {
       const amountLine = invoice.amount != null ? `💰 Amount: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 Amount: (unclear, edit it from your dashboard)";
       const customerLine = invoice.customer_name ? `👤 Customer: ${invoice.customer_name}` : "👤 Customer: (not mentioned)";
       const lines = [
@@ -99,15 +93,9 @@ const BOT_MESSAGES = {
         "",
         "Copy this and send it to your customer, or review it from your dashboard.",
       ];
-      if (remainingFree != null) {
-        lines.push(remainingFree > 0 ? `\n🎁 ${remainingFree} free invoice(s) left.` : "\n🎁 That was your last free invoice.");
-      }
       return lines.join("\n");
     },
     dashboardLine: (url) => `📊 Your dashboard (no login needed): ${url}`,
-    paywall: (limit, checkoutLine) => `🎉 You've used your first ${limit} free invoices!\n\nTo keep creating unlimited invoices and get payment reminders, ${checkoutLine}`,
-    checkoutLineFallback: "contact us to activate your subscription.",
-    checkoutLineWithUrl: (url) => `subscribe with one click here:\n${url}`,
     linkSuccess: "Your number is linked ✅\n\nNow send a voice note or text describing the job you did, the customer's name (optional), and the amount.",
     voiceNoOpenAI: "Voice messages need voice transcription enabled on our end. Until then, please type the job details: customer name, description, and amount.",
     voiceFailed: "I couldn't understand that voice message. Try sending it again or type the details instead.",
@@ -120,11 +108,11 @@ const BOT_MESSAGES = {
   },
 
   ur: {
-    welcome: (limit, connectUrl) => {
+    welcome: (connectUrl) => {
       const lines = [
-        "ہیلو! 👋 یہ ہے *سند* بوٹ — آپ کا وائس نوٹ یا ٹیکسٹ فوری طور پر ایک تیار انوائس میں بدل دیتا ہے۔",
+        "ہیلو! 👋 یہ ہے *سند* بوٹ — آپ کا وائس نوٹ یا ٹیکسٹ فوری طور پر ایک تیار انوائس میں بدل دیتا ہے، کسٹمر کے لیے پیمنٹ لنک کے ساتھ۔",
         "",
-        `آپ کے پہلے ${limit} انوائسز (پیمنٹ لنک کے ساتھ) بالکل مفت ہیں، بغیر کسی رجسٹریشن کے۔`,
+        "استعمال بالکل مفت ہے، کوئی سبسکرپشن یا رجسٹریشن نہیں — بس جب کسٹمر لنک سے ادائیگی کرے تو 5% فیس (اگر ادائیگی نہ ہو تو 0%)۔",
         "",
         'ابھی آزمائیں: ایک وائس میسج بھیجیں یا لکھیں مثلاً "احمد کے گھر AC ٹھیک کیا 250 ریال میں"۔',
       ];
@@ -137,7 +125,7 @@ const BOT_MESSAGES = {
       }
       return lines.join("\n");
     },
-    invoice: (invoice, remainingFree, pageUrl) => {
+    invoice: (invoice, pageUrl) => {
       const amountLine = invoice.amount != null ? `💰 رقم: ${invoice.amount} ${invoice.currency || ""}`.trim() : "💰 رقم: (واضح نہیں، ڈیش بورڈ سے درست کریں)";
       const customerLine = invoice.customer_name ? `👤 کسٹمر: ${invoice.customer_name}` : "👤 کسٹمر: (نامعلوم)";
       const lines = [
@@ -151,15 +139,9 @@ const BOT_MESSAGES = {
         "",
         "یہ کاپی کریں اور اپنے کسٹمر کو بھیجیں، یا ڈیش بورڈ سے دیکھیں۔",
       ];
-      if (remainingFree != null) {
-        lines.push(remainingFree > 0 ? `\n🎁 ${remainingFree} مفت انوائس باقی ہیں۔` : "\n🎁 یہ آپ کا آخری مفت انوائس تھا۔");
-      }
       return lines.join("\n");
     },
     dashboardLine: (url) => `📊 آپ کا ڈیش بورڈ (لاگ ان کی ضرورت نہیں): ${url}`,
-    paywall: (limit, checkoutLine) => `🎉 آپ نے اپنے پہلے ${limit} مفت انوائسز استعمال کر لیے!\n\nغیر محدود انوائسز اور ادائیگی کی یاد دہانی کے لیے، ${checkoutLine}`,
-    checkoutLineFallback: "اپنی سبسکرپشن فعال کرنے کے لیے ہم سے رابطہ کریں۔",
-    checkoutLineWithUrl: (url) => `یہاں سے ایک کلک میں سبسکرائب کریں:\n${url}`,
     linkSuccess: "آپ کا نمبر کامیابی سے جڑ گیا ✅\n\nاب کام کی تفصیل، کسٹمر کا نام (اختیاری)، اور رقم کے ساتھ ایک وائس میسج یا ٹیکسٹ بھیجیں۔",
     voiceNoOpenAI: "وائس میسجز کے لیے ہمارے سسٹم پر ٹرانسکرپشن فعال ہونا ضروری ہے۔ تب تک براہ کرم تفصیلات لکھیں: کسٹمر کا نام، تفصیل، اور رقم۔",
     voiceFailed: "یہ وائس میسج سمجھ نہیں آیا۔ دوبارہ بھیجیں یا تفصیلات لکھیں۔",

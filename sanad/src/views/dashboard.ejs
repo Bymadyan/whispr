@@ -10,7 +10,6 @@
     <h1>سند</h1>
     <nav class="nav-links">
       <a href="/connect-whatsapp">إعدادات واتساب</a>
-      <a href="/billing">الاشتراك</a>
       <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
     </nav>
   </header>
@@ -32,15 +31,6 @@
       <div class="accounts">
         <p class="error">رقم واتسابك مو مربوط بعد.</p>
         <p><a href="/connect-whatsapp" class="btn">اربط رقمك الحين</a></p>
-      </div>
-    <% } else if (!hasActiveSubscription) { %>
-      <div class="accounts">
-        <% if (remainingFree > 0) { %>
-          <p>🎁 باقي لك <strong><%= remainingFree %></strong> فاتورة مجانية قبل ما تحتاج تشترك.</p>
-        <% } else { %>
-          <p class="error">خلصت فواتيرك المجانية. اشترك عشان تكمل تسوي فواتير غير محدودة.</p>
-        <% } %>
-        <p><a href="/billing" class="btn">الاشتراك</a></p>
       </div>
     <% } %>
 

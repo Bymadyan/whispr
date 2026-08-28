@@ -26,10 +26,8 @@ router.post("/signup", async (req, res, next) => {
       .prepare(`INSERT INTO users (business_name, email, password_hash, dashboard_token) VALUES (?, ?, ?, ?)`)
       .run(businessName, email, passwordHash, dashboardToken);
 
-    db.prepare(`INSERT INTO subscriptions (user_id, status) VALUES (?, 'incomplete')`).run(result.lastInsertRowid);
-
     req.session.userId = result.lastInsertRowid;
-    res.redirect("/billing");
+    res.redirect("/connect-whatsapp");
   } catch (err) {
     next(err);
   }

@@ -9,8 +9,8 @@ const missing = requireEnv.filter((k) => !process.env[k]);
 if (missing.length) {
   console.warn(`تحذير: المتغيرات التالية غير مضبوطة في .env: ${missing.join(", ")}`);
 }
-if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID) {
-  console.warn("تحذير: STRIPE_SECRET_KEY أو STRIPE_PRICE_ID غير مضبوطة — صفحة الدفع لن تعمل حتى تضبطها.");
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.warn("تحذير: STRIPE_SECRET_KEY غير مضبوط — روابط الدفع وربط الحساب البنكي لن تعمل حتى تضبطه.");
 }
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn("تحذير: ANTHROPIC_API_KEY غير مضبوط — استخراج بيانات الفاتورة راح يكون بدائي جداً.");

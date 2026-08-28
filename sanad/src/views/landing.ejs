@@ -23,7 +23,7 @@
     </p>
     <% if (whatsappNumber) { %>
       <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">📱 جرّب الحين من واتساب — مجاناً</a>
-      <p class="muted small">بدون تسجيل ولا كلمة مرور. أول 3 فواتير (ورابط الدفع فيها) مجانية بالكامل.</p>
+      <p class="muted small">بدون تسجيل ولا كلمة مرور ولا اشتراك. استخدام غير محدود، مجاني بالكامل.</p>
     <% } else { %>
       <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
     <% } %>
@@ -49,15 +49,14 @@
   </section>
 
   <section class="pricing">
-    <h2>جرّب مجاناً، اشترك بس لو عجبك</h2>
+    <h2>السعر بسيط: تدفع بس لما تتقاضى</h2>
     <div class="price-card">
-      <div class="price">أول 3 فواتير <span class="muted">مجاناً</span></div>
+      <div class="price">5% <span class="muted">من كل فاتورة مدفوعة</span></div>
       <ul>
-        <li>فاتورة + رابط دفع لكل شغلة</li>
-        <li>بدون تسجيل ولا بطاقة دفع</li>
-        <li>بعدها 10$/شهرياً لفواتير غير محدودة</li>
-        <li>عمولة 4% بس على الفواتير المدفوعة (0% لو ما فيه دفع) — رقم واحد شامل كل شي</li>
-        <li>إلغاء في أي وقت</li>
+        <li>استخدام غير محدود، بدون اشتراك شهري إطلاقاً</li>
+        <li>فاتورة + رابط دفع لكل شغلة، بدون أي حد</li>
+        <li>0% لو الفاتورة ما انسددت — ما فيه أي رسوم مقدماً</li>
+        <li>بدون تسجيل ولا بطاقة دفع عشان تبدأ</li>
       </ul>
       <% if (whatsappNumber) { %>
         <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">ابدأ من واتساب</a>

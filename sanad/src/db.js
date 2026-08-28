@@ -26,17 +26,6 @@ db.exec(`
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
-  CREATE TABLE IF NOT EXISTS subscriptions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
-    stripe_customer_id TEXT,
-    stripe_subscription_id TEXT,
-    status TEXT NOT NULL DEFAULT 'incomplete', -- incomplete | active | trialing | past_due | canceled | unpaid
-    current_period_end INTEGER,
-    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
-  );
-
   -- الرقم اللي يبعت منه صاحب العمل رسائله على واتساب، بعد ما يربطه عبر رمز الربط
   CREATE TABLE IF NOT EXISTS whatsapp_links (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

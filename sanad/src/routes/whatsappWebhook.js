@@ -6,8 +6,7 @@ const db = require("../db");
 const { downloadMedia, sendMessage } = require("../whatsapp");
 const { transcribeAudio } = require("../transcribe");
 const { extractInvoice } = require("../extractInvoice");
-const { buildInvoicePaymentUrl, buildSubscriptionCheckoutUrl, buildConnectOnboardingUrl } = require("./billing");
-const { FREE_INVOICE_LIMIT } = require("../config");
+const { buildInvoicePaymentUrl, buildConnectOnboardingUrl } = require("./billing");
 const { detectLanguage, t } = require("../i18n");
 
 function baseUrl() {
@@ -40,6 +39,8 @@ function invoicePageUrl(invoice) {
   return `${baseUrl()}/invoice/${invoice.public_token}`;
 }
 
+// ما فيه تجربة مجانية محدودة ولا اشتراك — الاستخدام مجاني بالكامل دايماً، والدخل الوحيد عمولة
+// PLATFORM_FEE_PERCENT على الفواتير اللي تُدفع فعلاً عبر رابط الدفع (0% لو ما فيه دفع أصلاً).
 function getOrCreateUserForPhone(from) {
   const existingLink = db.prepare(`SELECT * FROM whatsapp_links WHERE phone_number = ?`).get(from);
   if (existingLink) {
@@ -48,30 +49,13 @@ function getOrCreateUserForPhone(from) {
 
   const token = crypto.randomBytes(24).toString("hex");
   const result = db.prepare(`INSERT INTO users (dashboard_token) VALUES (?)`).run(token);
-  db.prepare(`INSERT INTO subscriptions (user_id, status) VALUES (?, 'incomplete')`).run(result.lastInsertRowid);
   db.prepare(`INSERT INTO whatsapp_links (user_id, phone_number) VALUES (?, ?)`).run(result.lastInsertRowid, from);
 
   return { user: db.prepare(`SELECT * FROM users WHERE id = ?`).get(result.lastInsertRowid), isNew: true };
 }
 
-const ACTIVE_STATUSES = new Set(["active", "trialing"]);
-
 async function processInvoiceMessage(res, user, transcript, source, isNew, lang) {
   const msg = t(lang);
-  const invoiceCount = db.prepare(`SELECT COUNT(*) AS n FROM invoices WHERE user_id = ?`).get(user.id).n;
-  const sub = db.prepare(`SELECT * FROM subscriptions WHERE user_id = ?`).get(user.id);
-  const hasActiveSubscription = sub && ACTIVE_STATUSES.has(sub.status);
-
-  if (invoiceCount >= FREE_INVOICE_LIMIT && !hasActiveSubscription) {
-    let checkoutLine = msg.checkoutLineFallback;
-    try {
-      const url = await buildSubscriptionCheckoutUrl(user);
-      if (url) checkoutLine = msg.checkoutLineWithUrl(url);
-    } catch (err) {
-      console.error("فشل إنشاء رابط الاشتراك:", err.message);
-    }
-    return reply(res, msg.paywall(FREE_INVOICE_LIMIT, checkoutLine));
-  }
 
   const extracted = await extractInvoice(transcript);
   const publicToken = crypto.randomBytes(16).toString("hex");
@@ -102,8 +86,7 @@ async function processInvoiceMessage(res, user, transcript, source, isNew, lang)
     console.error("فشل إنشاء رابط الدفع للفاتورة:", err.message);
   }
 
-  const remainingFree = hasActiveSubscription ? null : Math.max(0, FREE_INVOICE_LIMIT - (invoiceCount + 1));
-  let message = msg.invoice(invoice, remainingFree, invoicePageUrl(invoice));
+  let message = msg.invoice(invoice, invoicePageUrl(invoice));
 
   if (isNew) {
     let connectUrl = null;
@@ -112,7 +95,7 @@ async function processInvoiceMessage(res, user, transcript, source, isNew, lang)
     } catch (err) {
       console.error("فشل إنشاء رابط ربط الحساب البنكي:", err.message);
     }
-    message = `${msg.welcome(FREE_INVOICE_LIMIT, connectUrl)}\n\n—\n\n${message}\n\n${msg.dashboardLine(dashboardUrl(user))}`;
+    message = `${msg.welcome(connectUrl)}\n\n—\n\n${message}\n\n${msg.dashboardLine(dashboardUrl(user))}`;
   }
 
   reply(res, message);
@@ -160,7 +143,7 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
     } else if (body) {
       transcript = body;
     } else {
-      return reply(res, isNew ? msg.welcome(FREE_INVOICE_LIMIT, null) : msg.emptyPrompt);
+      return reply(res, isNew ? msg.welcome(null) : msg.emptyPrompt);
     }
 
     // للرسائل الصوتية، نكتشف اللغة من النص المفرّغ نفسه (أدق من نص الرسالة الأصلي اللي غالباً فاضي)
