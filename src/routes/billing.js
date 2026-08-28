@@ -65,7 +65,7 @@ router.get("/billing/success", requireAuth, async (req, res, next) => {
       upsertSubscriptionFromStripe(req.user.id, session.customer, session.subscription);
     }
 
-    res.redirect("/connect-google");
+    res.redirect("/dashboard");
   } catch (err) {
     next(err);
   }

@@ -6,11 +6,6 @@ const { requireAuth, requireActiveSubscription } = require("../middleware");
 
 router.use(requireAuth, requireActiveSubscription);
 
-// صفحة وسيطة بعد الاشتراك تشرح للعميل إنه الخطوة الجاية هي ربط حساب Google
-router.get("/connect-google", (req, res) => {
-  res.redirect("/dashboard");
-});
-
 // يبدأ تدفق OAuth لربط حساب Google Business Profile
 router.get("/google", (req, res) => {
   res.redirect(google.getAuthUrl());
