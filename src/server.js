@@ -36,6 +36,9 @@ app.get("/", (req, res) => {
   res.render("landing");
 });
 
+app.get("/privacy", (req, res) => res.render("privacy"));
+app.get("/terms", (req, res) => res.render("terms"));
+
 app.use("/", require("./routes/account"));
 app.use("/auth", require("./routes/auth"));
 app.use("/", require("./routes/dashboard"));
