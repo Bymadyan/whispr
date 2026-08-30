@@ -41,6 +41,9 @@ db.exec(`
     auto_publish_positive INTEGER NOT NULL DEFAULT 0, -- نشر تلقائي للتقييمات الإيجابية الآمنة فقط، تعطيل افتراضياً
     custom_risk_keywords TEXT, -- كلمات إضافية يضيفها صاحب النشاط توقف النشر التلقائي، مفصولة بفواصل
     reply_tone TEXT NOT NULL DEFAULT 'friendly', -- friendly | formal | short
+    insight_summary TEXT, -- آخر تحليل للأنماط المتكررة بالتقييمات السلبية
+    insight_generated_at INTEGER,
+    insight_source TEXT, -- claude | keywords
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -83,6 +86,15 @@ if (!accountColumns.includes("custom_risk_keywords")) {
 }
 if (!accountColumns.includes("reply_tone")) {
   db.exec(`ALTER TABLE accounts ADD COLUMN reply_tone TEXT NOT NULL DEFAULT 'friendly'`);
+}
+if (!accountColumns.includes("insight_summary")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN insight_summary TEXT`);
+}
+if (!accountColumns.includes("insight_generated_at")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN insight_generated_at INTEGER`);
+}
+if (!accountColumns.includes("insight_source")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN insight_source TEXT`);
 }
 
 const draftColumns = db.prepare(`PRAGMA table_info(drafts)`).all().map((c) => c.name);

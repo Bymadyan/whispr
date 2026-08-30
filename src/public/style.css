@@ -82,6 +82,28 @@ body {
 .stat-value { font-size: 24px; font-weight: bold; }
 .stat-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
 
+.insights { margin-bottom: 24px; }
+.insights h2 { margin-bottom: 12px; }
+.insight-card {
+  background: linear-gradient(135deg, #eef4ff, #ffffff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+}
+.insight-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.insight-summary {
+  white-space: pre-wrap;
+  font-family: inherit;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 .reviews-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .filter-chip { padding: 6px 12px; border-radius: 999px; background: var(--bg); color: var(--text); text-decoration: none; font-size: 13px; border: 1px solid var(--border); }

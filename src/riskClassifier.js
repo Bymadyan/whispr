@@ -37,4 +37,4 @@ function isLowRisk({ starRating, comment, customKeywords }) {
   return true;
 }
 
-module.exports = { isLowRisk, containsRiskKeyword };
+module.exports = { isLowRisk, containsRiskKeyword, parseCustomKeywords, RISK_KEYWORDS };

@@ -37,6 +37,30 @@
       </section>
     <% } %>
 
+    <% if (accounts.length) { %>
+      <section class="insights">
+        <h2>📊 تحليل ذكي — أهم أسباب الشكاوى المتكررة</h2>
+        <% accounts.forEach(function(a) { %>
+          <div class="insight-card">
+            <div class="insight-header">
+              <strong><%= a.business_name %></strong>
+              <% if (a.insight_generated_at) { %>
+                <span class="muted small">آخر تحديث: <%= new Date(a.insight_generated_at * 1000).toLocaleString('ar') %></span>
+              <% } %>
+            </div>
+            <% if (a.insight_summary) { %>
+              <pre class="insight-summary"><%= a.insight_summary %></pre>
+            <% } else { %>
+              <p class="muted">لسه ما سويت تحليل لهذا النشاط. اضغط الزر تحت.</p>
+            <% } %>
+            <form method="POST" action="/accounts/<%= a.id %>/insights">
+              <button type="submit" class="btn secondary tiny">🔄 <%= a.insight_summary ? 'تحديث التحليل' : 'حلّل تقييماتي الآن' %></button>
+            </form>
+          </div>
+        <% }) %>
+      </section>
+    <% } %>
+
     <section class="accounts">
       <h2>الأنشطة التجارية المربوطة</h2>
       <% if (!accounts.length) { %>

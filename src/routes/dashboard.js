@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require("../db");
 const { requireAuth, requireActiveSubscription } = require("../middleware");
 const { VALID_TONES } = require("../replyGenerator");
+const { generateInsights } = require("../insightsGenerator");
 
 router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
   const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC`).all(req.user.id);
@@ -87,6 +88,36 @@ router.post("/accounts/:id/settings", requireAuth, requireActiveSubscription, (r
   );
 
   res.redirect("/dashboard");
+});
+
+// يحلل التقييمات السلبية/المتوسطة الأخيرة لنشاط تجاري ويطلع أهم الأسباب المتكررة
+router.post("/accounts/:id/insights", requireAuth, requireActiveSubscription, async (req, res, next) => {
+  try {
+    const accountId = Number(req.params.id);
+    const account = db.prepare(`SELECT * FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
+    if (!account) return res.status(404).send("النشاط التجاري غير موجود");
+
+    const reviews = db
+      .prepare(
+        `SELECT star_rating, comment FROM reviews
+         WHERE account_id = ? AND review_create_time >= datetime('now', '-90 days')`
+      )
+      .all(accountId);
+
+    const { summary, source } = await generateInsights({
+      businessName: account.business_name,
+      reviews,
+      customKeywords: account.custom_risk_keywords,
+    });
+
+    db.prepare(
+      `UPDATE accounts SET insight_summary = ?, insight_generated_at = strftime('%s','now'), insight_source = ? WHERE id = ?`
+    ).run(summary, source, accountId);
+
+    res.redirect("/dashboard");
+  } catch (err) {
+    next(err);
+  }
 });
 
 // تصدير كل تقييمات العميل كملف CSV
