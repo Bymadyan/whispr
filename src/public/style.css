@@ -65,9 +65,28 @@ body {
 
 .accounts, .reviews { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
 .accounts ul { list-style: none; padding: 0; }
-.accounts li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.accounts li.account-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.account-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .auto-publish-toggle { margin: 0; }
 .btn.tiny { padding: 6px 10px; font-size: 12px; }
+
+.account-settings { margin-top: 8px; }
+.account-settings summary { cursor: pointer; color: var(--primary); font-size: 13px; }
+.settings-form { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 12px; background: var(--bg); border-radius: 8px; }
+.settings-form label { font-size: 12px; color: var(--muted); }
+.settings-form select, .settings-form input[type="text"] { padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; }
+.settings-form button { align-self: flex-start; margin-top: 4px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-tile { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-value { font-size: 24px; font-weight: bold; }
+.stat-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+.reviews-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.filter-chip { padding: 6px 12px; border-radius: 999px; background: var(--bg); color: var(--text); text-decoration: none; font-size: 13px; border: 1px solid var(--border); }
+.filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+.stars-filter { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); font-size: 13px; background: var(--bg); }
 
 .review-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
 .review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }

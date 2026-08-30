@@ -5,6 +5,7 @@ const google = require("../googleClient");
 const { generateDraftReply } = require("../replyGenerator");
 const { isLowRisk } = require("../riskClassifier");
 const { requireAuth, requireActiveSubscription } = require("../middleware");
+const { notifyNewReviews } = require("../emailer");
 
 router.use(requireAuth, requireActiveSubscription);
 
@@ -13,6 +14,7 @@ router.post("/sync", async (req, res, next) => {
   try {
     const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ?`).all(req.user.id);
     let newCount = 0;
+    let needsReviewCount = 0;
 
     for (const account of accounts) {
       const client = await google.getAuthedClientForAccount(account);
@@ -57,10 +59,12 @@ router.post("/sync", async (req, res, next) => {
               starRating,
               comment,
               reviewerName: (gr.reviewer && gr.reviewer.displayName) || "",
+              tone: account.reply_tone,
             });
 
             const eligibleForAutoPublish =
-              account.auto_publish_positive && isLowRisk({ starRating, comment });
+              account.auto_publish_positive &&
+              isLowRisk({ starRating, comment, customKeywords: account.custom_risk_keywords });
 
             if (eligibleForAutoPublish) {
               // نشر تلقائي فوري — فقط لتقييمات آمنة (4-5 نجوم بدون أي إشارة سلبية بالتعليق)
@@ -77,12 +81,19 @@ router.post("/sync", async (req, res, next) => {
               db.prepare(
                 `INSERT INTO drafts (review_id, draft_text, status, generated_by) VALUES (?, ?, 'draft', ?)`
               ).run(info.lastInsertRowid, text, generatedBy);
+              needsReviewCount++;
             }
           }
         }
       } while (pageToken);
 
       db.prepare(`UPDATE accounts SET last_synced_at = strftime('%s','now') WHERE id = ?`).run(account.id);
+    }
+
+    if (needsReviewCount > 0) {
+      notifyNewReviews({ toEmail: req.user.email, businessName: req.user.business_name, count: needsReviewCount }).catch(
+        (err) => console.error("Failed to send new-review notification email:", err.message)
+      );
     }
 
     res.redirect(`/dashboard?synced=${newCount}`);
@@ -95,7 +106,7 @@ router.post("/sync", async (req, res, next) => {
 function getOwnedReview(reviewId, userId) {
   return db
     .prepare(
-      `SELECT r.*, a.user_id, a.business_name, a.id AS account_id
+      `SELECT r.*, a.user_id, a.business_name, a.reply_tone, a.id AS account_id
        FROM reviews r JOIN accounts a ON a.id = r.account_id
        WHERE r.id = ? AND a.user_id = ?`
     )
@@ -140,6 +151,7 @@ router.post("/:id/regenerate", async (req, res, next) => {
       starRating: review.star_rating,
       comment: review.comment,
       reviewerName: review.reviewer_name,
+      tone: review.reply_tone,
     });
 
     const existing = db.prepare(`SELECT id FROM drafts WHERE review_id = ?`).get(reviewId);

@@ -14,16 +14,26 @@ const RISK_KEYWORDS = [
   "unfortunately", "poor", "terrible", "awful", "horrible",
 ];
 
-function containsRiskKeyword(text) {
-  if (!text) return false;
-  const lower = text.toLowerCase();
-  return RISK_KEYWORDS.some((word) => lower.includes(word.toLowerCase()));
+// customKeywords: نص خام من إعدادات النشاط التجاري، كلمات مفصولة بفواصل
+function parseCustomKeywords(customKeywords) {
+  if (!customKeywords) return [];
+  return customKeywords
+    .split(",")
+    .map((w) => w.trim())
+    .filter(Boolean);
 }
 
-// آمن للنشر التلقائي فقط لو: 4 نجوم فأعلى، وما فيه أي إشارة سلبية بالتعليق
-function isLowRisk({ starRating, comment }) {
+function containsRiskKeyword(text, customKeywords) {
+  if (!text) return false;
+  const lower = text.toLowerCase();
+  const allKeywords = RISK_KEYWORDS.concat(parseCustomKeywords(customKeywords));
+  return allKeywords.some((word) => lower.includes(word.toLowerCase()));
+}
+
+// آمن للنشر التلقائي فقط لو: 4 نجوم فأعلى، وما فيه أي إشارة سلبية بالتعليق (بما فيها كلمات المستخدم الخاصة)
+function isLowRisk({ starRating, comment, customKeywords }) {
   if (starRating < 4) return false;
-  if (containsRiskKeyword(comment)) return false;
+  if (containsRiskKeyword(comment, customKeywords)) return false;
   return true;
 }
 

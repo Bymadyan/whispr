@@ -39,6 +39,8 @@ db.exec(`
     token_expiry INTEGER,
     last_synced_at INTEGER,
     auto_publish_positive INTEGER NOT NULL DEFAULT 0, -- نشر تلقائي للتقييمات الإيجابية الآمنة فقط، تعطيل افتراضياً
+    custom_risk_keywords TEXT, -- كلمات إضافية يضيفها صاحب النشاط توقف النشر التلقائي، مفصولة بفواصل
+    reply_tone TEXT NOT NULL DEFAULT 'friendly', -- friendly | formal | short
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -75,6 +77,12 @@ if (!accountColumns.includes("user_id")) {
 }
 if (!accountColumns.includes("auto_publish_positive")) {
   db.exec(`ALTER TABLE accounts ADD COLUMN auto_publish_positive INTEGER NOT NULL DEFAULT 0`);
+}
+if (!accountColumns.includes("custom_risk_keywords")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN custom_risk_keywords TEXT`);
+}
+if (!accountColumns.includes("reply_tone")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN reply_tone TEXT NOT NULL DEFAULT 'friendly'`);
 }
 
 const draftColumns = db.prepare(`PRAGMA table_info(drafts)`).all().map((c) => c.name);

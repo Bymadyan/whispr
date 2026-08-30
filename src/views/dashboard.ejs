@@ -16,6 +16,27 @@
   </header>
 
   <div class="container">
+    <% if (stats && stats.total) { %>
+      <section class="stats-row">
+        <div class="stat-tile">
+          <div class="stat-value"><%= stats.total %></div>
+          <div class="stat-label">إجمالي التقييمات</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value">★ <%= stats.avg_rating || '-' %></div>
+          <div class="stat-label">متوسط التقييم</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value"><%= stats.needs_reply || 0 %></div>
+          <div class="stat-label">تحتاج ردك</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-value"><%= stats.published || 0 %></div>
+          <div class="stat-label">تم الرد عليها</div>
+        </div>
+      </section>
+    <% } %>
+
     <section class="accounts">
       <h2>الأنشطة التجارية المربوطة</h2>
       <% if (!accounts.length) { %>
@@ -24,23 +45,44 @@
       <% } else { %>
         <ul>
           <% accounts.forEach(function(a) { %>
-            <li>
-              <div>
-                <strong><%= a.business_name %></strong>
-                <span class="muted">
-                  <% if (a.last_synced_at) { %>
-                    آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
-                  <% } else { %>
-                    ما تمت أي مزامنة بعد
-                  <% } %>
-                </span>
+            <li class="account-item">
+              <div class="account-row">
+                <div>
+                  <strong><%= a.business_name %></strong>
+                  <span class="muted">
+                    <% if (a.last_synced_at) { %>
+                      آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
+                    <% } else { %>
+                      ما تمت أي مزامنة بعد
+                    <% } %>
+                  </span>
+                </div>
+                <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
+                  <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
+                  <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
+                    <%= a.auto_publish_positive ? '⚡ النشر التلقائي للإيجابي: مفعّل' : '⚡ فعّل النشر التلقائي للإيجابي' %>
+                  </button>
+                </form>
               </div>
-              <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
-                <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
-                <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
-                  <%= a.auto_publish_positive ? '⚡ النشر التلقائي للإيجابي: مفعّل' : '⚡ فعّل النشر التلقائي للإيجابي' %>
-                </button>
-              </form>
+
+              <details class="account-settings">
+                <summary>⚙️ إعدادات الرد لـ "<%= a.business_name %>"</summary>
+                <form method="POST" action="/accounts/<%= a.id %>/settings" class="settings-form">
+                  <label>نبرة الرد</label>
+                  <select name="replyTone">
+                    <% tones.forEach(function(t) { %>
+                      <option value="<%= t %>" <%= a.reply_tone === t ? 'selected' : '' %>>
+                        <%= t === 'friendly' ? 'ودّية (افتراضي)' : t === 'formal' ? 'رسمية' : 'مختصرة' %>
+                      </option>
+                    <% }) %>
+                  </select>
+
+                  <label>كلمات خطر إضافية (تمنع النشر التلقائي)، افصل بينها بفاصلة</label>
+                  <input type="text" name="customKeywords" placeholder="مثال: بارد, متأخر, وسخ" value="<%= a.custom_risk_keywords || '' %>" />
+
+                  <button type="submit" class="btn secondary tiny">💾 حفظ الإعدادات</button>
+                </form>
+              </details>
             </li>
           <% }) %>
         </ul>
@@ -53,14 +95,29 @@
             <button class="btn" type="submit">🔄 جلب التقييمات الجديدة</button>
           </form>
           <a class="btn secondary" href="/auth/google">+ ربط نشاط تجاري آخر</a>
+          <a class="btn secondary" href="/reviews/export.csv">⬇️ تصدير CSV</a>
         </div>
       <% } %>
     </section>
 
     <section class="reviews">
-      <h2>التقييمات والمسودات</h2>
+      <div class="reviews-header">
+        <h2>التقييمات والمسودات</h2>
+        <div class="filters">
+          <a class="filter-chip <%= filterStatus === 'all' ? 'active' : '' %>" href="?status=all">الكل</a>
+          <a class="filter-chip <%= filterStatus === 'needs_reply' ? 'active' : '' %>" href="?status=needs_reply">تحتاج ردي</a>
+          <a class="filter-chip <%= filterStatus === 'published' ? 'active' : '' %>" href="?status=published">منشورة</a>
+          <select onchange="window.location.href = this.value ? '?stars=' + this.value : '?status=<%= filterStatus %>'" class="stars-filter">
+            <option value="">كل النجوم</option>
+            <% [5,4,3,2,1].forEach(function(s) { %>
+              <option value="<%= s %>" <%= filterStars === s ? 'selected' : '' %>><%= s %> نجوم</option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+
       <% if (!reviews.length) { %>
-        <p>ما فيه تقييمات بعد. اضغط "جلب التقييمات الجديدة" فوق.</p>
+        <p>ما فيه تقييمات مطابقة لهذا الفلتر.</p>
       <% } %>
       <% reviews.forEach(function(r) { %>
         <div class="review-card" id="review-<%= r.id %>">
