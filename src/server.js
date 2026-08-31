@@ -31,9 +31,25 @@ app.use("/", require("./routes/billing"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// قراءة كوكي اللغة يدوياً بدون الحاجة لمكتبة cookie-parser إضافية
+function readLangCookie(req) {
+  const header = req.headers.cookie || "";
+  const match = header.match(/(?:^|;\s*)whispr_lang=(en|ar)/);
+  return match ? match[1] : null;
+}
+
 app.get("/", (req, res) => {
   if (req.session.userId) return res.redirect("/dashboard");
-  res.render("landing");
+
+  const queryLang = req.query.lang === "ar" || req.query.lang === "en" ? req.query.lang : null;
+  const lang = queryLang || readLangCookie(req) || "en"; // الإنجليزي هو الافتراضي
+
+  if (queryLang) {
+    res.cookie("whispr_lang", queryLang, { maxAge: 1000 * 60 * 60 * 24 * 365, httpOnly: false });
+  }
+
+  const { getLandingCopy } = require("./i18n/landing");
+  res.render("landing", { t: getLandingCopy(lang) });
 });
 
 app.get("/privacy", (req, res) => res.render("privacy"));
