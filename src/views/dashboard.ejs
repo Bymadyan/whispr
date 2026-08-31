@@ -16,6 +16,30 @@
   </header>
 
   <div class="container">
+    <% if (accounts.length) { %>
+      <section class="digest-card">
+        <div class="digest-header">
+          <h2>📮 التقرير الأسبوعي</h2>
+          <% if (user.last_digest_sent_at) { %>
+            <span class="muted small">آخر تقرير: <%= new Date(user.last_digest_sent_at * 1000).toLocaleString('ar') %></span>
+          <% } %>
+        </div>
+        <% if (typeof digestSent !== 'undefined' && digestSent === '1') { %>
+          <p class="badge published">✅ أُرسل التقرير لبريدك</p>
+        <% } else if (typeof digestSent !== 'undefined' && digestSent === '0') { %>
+          <p class="muted">تولّد التقرير وتقدر تشوفه تحت، لكن ما انبعث بريد (RESEND_API_KEY غير مضبوط).</p>
+        <% } %>
+        <% if (user.last_digest_summary) { %>
+          <pre class="insight-summary"><%= user.last_digest_summary %></pre>
+        <% } else { %>
+          <p class="muted">يتولد تلقائياً كل يوم اثنين ويوصلك بريدياً. تقدر تجرب الآن بدون ما تنتظر.</p>
+        <% } %>
+        <form method="POST" action="/digest/send-now">
+          <button type="submit" class="btn secondary tiny">✉️ أرسل تجربة الآن</button>
+        </form>
+      </section>
+    <% } %>
+
     <% if (stats && stats.total) { %>
       <section class="stats-row">
         <div class="stat-tile">

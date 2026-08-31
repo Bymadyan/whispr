@@ -57,3 +57,5 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`Whispr شغالة على http://localhost:${port}`);
 });
+
+require("./scheduler").startScheduler();

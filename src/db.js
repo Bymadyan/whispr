@@ -14,6 +14,8 @@ db.exec(`
     business_name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
+    last_digest_summary TEXT, -- آخر تقرير أسبوعي تولّد (نص، يظهر باللوحة كنسخة احتياطية عن الإيميل)
+    last_digest_sent_at INTEGER,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -74,6 +76,14 @@ db.exec(`
 `);
 
 // ترقية بسيطة لقواعد بيانات قديمة أُنشئت قبل إضافة نظام الحسابات المتعدد (multi-tenant)
+const userColumns = db.prepare(`PRAGMA table_info(users)`).all().map((c) => c.name);
+if (!userColumns.includes("last_digest_summary")) {
+  db.exec(`ALTER TABLE users ADD COLUMN last_digest_summary TEXT`);
+}
+if (!userColumns.includes("last_digest_sent_at")) {
+  db.exec(`ALTER TABLE users ADD COLUMN last_digest_sent_at INTEGER`);
+}
+
 const accountColumns = db.prepare(`PRAGMA table_info(accounts)`).all().map((c) => c.name);
 if (!accountColumns.includes("user_id")) {
   db.exec(`ALTER TABLE accounts ADD COLUMN user_id INTEGER REFERENCES users(id)`);

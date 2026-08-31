@@ -4,6 +4,8 @@ const db = require("../db");
 const { requireAuth, requireActiveSubscription } = require("../middleware");
 const { VALID_TONES } = require("../replyGenerator");
 const { generateInsights } = require("../insightsGenerator");
+const { buildWeeklyDigest } = require("../digestGenerator");
+const { sendWeeklyDigest } = require("../emailer");
 
 router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
   const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC`).all(req.user.id);
@@ -57,6 +59,7 @@ router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
     filterStatus,
     filterStars,
     tones: VALID_TONES,
+    digestSent: req.query.digestSent,
   });
 });
 
@@ -115,6 +118,23 @@ router.post("/accounts/:id/insights", requireAuth, requireActiveSubscription, as
     ).run(summary, source, accountId);
 
     res.redirect("/dashboard");
+  } catch (err) {
+    next(err);
+  }
+});
+
+// يولّد التقرير الأسبوعي الآن (بدل ما ينتظر جدولة الاثنين) ويرسله بريدياً لو الإيميل مفعّل
+router.post("/digest/send-now", requireAuth, requireActiveSubscription, async (req, res, next) => {
+  try {
+    const digest = await buildWeeklyDigest(req.user);
+    if (!digest) return res.redirect("/dashboard");
+
+    db.prepare(
+      `UPDATE users SET last_digest_summary = ?, last_digest_sent_at = strftime('%s','now') WHERE id = ?`
+    ).run(digest.narrative, req.user.id);
+
+    const sent = await sendWeeklyDigest({ toEmail: req.user.email, subject: digest.subject, narrative: digest.narrative });
+    res.redirect(`/dashboard?digestSent=${sent ? "1" : "0"}`);
   } catch (err) {
     next(err);
   }

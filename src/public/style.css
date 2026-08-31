@@ -104,6 +104,15 @@ body {
   line-height: 1.8;
 }
 
+.digest-card {
+  background: linear-gradient(135deg, #fff7e6, #ffffff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.digest-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+
 .reviews-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .filter-chip { padding: 6px 12px; border-radius: 999px; background: var(--bg); color: var(--text); text-decoration: none; font-size: 13px; border: 1px solid var(--border); }
