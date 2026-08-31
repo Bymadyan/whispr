@@ -15,7 +15,7 @@ router.get("/google/callback", async (req, res, next) => {
   try {
     const { code, error } = req.query;
     if (error) {
-      return res.status(400).send(`تم رفض الصلاحية من Google: ${error}`);
+      return res.status(400).send(`Google access was denied: ${error}`);
     }
     const tokens = await google.exchangeCodeForTokens(code);
 
@@ -59,7 +59,7 @@ router.post("/select-location", (req, res, next) => {
     if (!tokens) return res.redirect("/auth/google");
 
     const { locationName, businessName } = req.body;
-    if (!locationName) return res.status(400).send("لازم تختار نشاط تجاري");
+    if (!locationName) return res.status(400).send("Please select a business");
 
     db.prepare(
       `INSERT INTO accounts (user_id, business_name, location_name, access_token, refresh_token, token_expiry)

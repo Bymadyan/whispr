@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <title>SanadPay - لوحة التحكم</title>
+  <title>SanadPay - Dashboard</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
@@ -10,8 +10,8 @@
     <h1>SanadPay</h1>
     <nav class="nav-links">
       <span class="muted small"><%= user.business_name %></span>
-      <a href="/billing">الاشتراك</a>
-      <form method="POST" action="/logout" style="display:inline"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+      <a href="/billing">Subscription</a>
+      <form method="POST" action="/logout" style="display:inline"><button class="link-btn" type="submit">Log out</button></form>
     </nav>
   </header>
 
@@ -19,23 +19,23 @@
     <% if (accounts.length) { %>
       <section class="digest-card">
         <div class="digest-header">
-          <h2>📮 التقرير الأسبوعي</h2>
+          <h2>📮 Weekly Digest</h2>
           <% if (user.last_digest_sent_at) { %>
-            <span class="muted small">آخر تقرير: <%= new Date(user.last_digest_sent_at * 1000).toLocaleString('ar') %></span>
+            <span class="muted small">Last sent: <%= new Date(user.last_digest_sent_at * 1000).toLocaleString('en-US') %></span>
           <% } %>
         </div>
         <% if (typeof digestSent !== 'undefined' && digestSent === '1') { %>
-          <p class="badge published">✅ أُرسل التقرير لبريدك</p>
+          <p class="badge published">✅ Digest sent to your email</p>
         <% } else if (typeof digestSent !== 'undefined' && digestSent === '0') { %>
-          <p class="muted">تولّد التقرير وتقدر تشوفه تحت، لكن ما انبعث بريد (RESEND_API_KEY غير مضبوط).</p>
+          <p class="muted">The digest was generated and you can see it below, but no email was sent (RESEND_API_KEY not configured).</p>
         <% } %>
         <% if (user.last_digest_summary) { %>
           <pre class="insight-summary"><%= user.last_digest_summary %></pre>
         <% } else { %>
-          <p class="muted">يتولد تلقائياً كل يوم اثنين ويوصلك بريدياً. تقدر تجرب الآن بدون ما تنتظر.</p>
+          <p class="muted">Generated automatically every Monday and delivered by email. You can try it now without waiting.</p>
         <% } %>
         <form method="POST" action="/digest/send-now">
-          <button type="submit" class="btn secondary tiny">✉️ أرسل تجربة الآن</button>
+          <button type="submit" class="btn secondary tiny">✉️ Send Test Now</button>
         </form>
       </section>
     <% } %>
@@ -44,41 +44,41 @@
       <section class="stats-row">
         <div class="stat-tile">
           <div class="stat-value"><%= stats.total %></div>
-          <div class="stat-label">إجمالي التقييمات</div>
+          <div class="stat-label">Total Reviews</div>
         </div>
         <div class="stat-tile">
           <div class="stat-value">★ <%= stats.avg_rating || '-' %></div>
-          <div class="stat-label">متوسط التقييم</div>
+          <div class="stat-label">Average Rating</div>
         </div>
         <div class="stat-tile">
           <div class="stat-value"><%= stats.needs_reply || 0 %></div>
-          <div class="stat-label">تحتاج ردك</div>
+          <div class="stat-label">Need Your Reply</div>
         </div>
         <div class="stat-tile">
           <div class="stat-value"><%= stats.published || 0 %></div>
-          <div class="stat-label">تم الرد عليها</div>
+          <div class="stat-label">Replied</div>
         </div>
       </section>
     <% } %>
 
     <% if (accounts.length) { %>
       <section class="insights">
-        <h2>📊 تحليل ذكي — أهم أسباب الشكاوى المتكررة</h2>
+        <h2>📊 Smart Insights — Top Recurring Complaint Themes</h2>
         <% accounts.forEach(function(a) { %>
           <div class="insight-card">
             <div class="insight-header">
               <strong><%= a.business_name %></strong>
               <% if (a.insight_generated_at) { %>
-                <span class="muted small">آخر تحديث: <%= new Date(a.insight_generated_at * 1000).toLocaleString('ar') %></span>
+                <span class="muted small">Last updated: <%= new Date(a.insight_generated_at * 1000).toLocaleString('en-US') %></span>
               <% } %>
             </div>
             <% if (a.insight_summary) { %>
               <pre class="insight-summary"><%= a.insight_summary %></pre>
             <% } else { %>
-              <p class="muted">لسه ما سويت تحليل لهذا النشاط. اضغط الزر تحت.</p>
+              <p class="muted">No analysis yet for this business. Click the button below.</p>
             <% } %>
             <form method="POST" action="/accounts/<%= a.id %>/insights">
-              <button type="submit" class="btn secondary tiny">🔄 <%= a.insight_summary ? 'تحديث التحليل' : 'حلّل تقييماتي الآن' %></button>
+              <button type="submit" class="btn secondary tiny">🔄 <%= a.insight_summary ? 'Refresh Analysis' : 'Analyze My Reviews Now' %></button>
             </form>
           </div>
         <% }) %>
@@ -86,10 +86,10 @@
     <% } %>
 
     <section class="accounts">
-      <h2>الأنشطة التجارية المربوطة</h2>
+      <h2>Connected Businesses</h2>
       <% if (!accounts.length) { %>
-        <p>ما فيه أي نشاط تجاري مربوط بعد.</p>
-        <a class="btn" href="/auth/google">+ ربط حساب Google Business Profile</a>
+        <p>No business connected yet.</p>
+        <a class="btn" href="/auth/google">+ Connect Google Business Profile</a>
       <% } else { %>
         <ul>
           <% accounts.forEach(function(a) { %>
@@ -99,73 +99,73 @@
                   <strong><%= a.business_name %></strong>
                   <span class="muted">
                     <% if (a.last_synced_at) { %>
-                      آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
+                      Last synced: <%= new Date(a.last_synced_at * 1000).toLocaleString('en-US') %>
                     <% } else { %>
-                      ما تمت أي مزامنة بعد
+                      No sync yet
                     <% } %>
                   </span>
                 </div>
                 <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
                   <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
                   <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
-                    <%= a.auto_publish_positive ? '⚡ النشر التلقائي للإيجابي: مفعّل' : '⚡ فعّل النشر التلقائي للإيجابي' %>
+                    <%= a.auto_publish_positive ? '⚡ Smart Auto-Publish: On' : '⚡ Enable Smart Auto-Publish' %>
                   </button>
                 </form>
               </div>
 
               <details class="account-settings">
-                <summary>⚙️ إعدادات الرد لـ "<%= a.business_name %>"</summary>
+                <summary>⚙️ Reply settings for "<%= a.business_name %>"</summary>
                 <form method="POST" action="/accounts/<%= a.id %>/settings" class="settings-form">
-                  <label>نبرة الرد</label>
+                  <label>Reply tone</label>
                   <select name="replyTone">
                     <% tones.forEach(function(t) { %>
                       <option value="<%= t %>" <%= a.reply_tone === t ? 'selected' : '' %>>
-                        <%= t === 'friendly' ? 'ودّية (افتراضي)' : t === 'formal' ? 'رسمية' : 'مختصرة' %>
+                        <%= t === 'friendly' ? 'Friendly (default)' : t === 'formal' ? 'Formal' : 'Short' %>
                       </option>
                     <% }) %>
                   </select>
 
-                  <label>كلمات خطر إضافية (تمنع النشر التلقائي)، افصل بينها بفاصلة</label>
-                  <input type="text" name="customKeywords" placeholder="مثال: بارد, متأخر, وسخ" value="<%= a.custom_risk_keywords || '' %>" />
+                  <label>Extra risk keywords (blocks auto-publish), comma-separated</label>
+                  <input type="text" name="customKeywords" placeholder="e.g. cold, late, dirty" value="<%= a.custom_risk_keywords || '' %>" />
 
-                  <button type="submit" class="btn secondary tiny">💾 حفظ الإعدادات</button>
+                  <button type="submit" class="btn secondary tiny">💾 Save Settings</button>
                 </form>
               </details>
             </li>
           <% }) %>
         </ul>
         <p class="muted small">
-          "النشر التلقائي للإيجابي" ينشر رد فوري بدون مراجعتك بس للتقييمات 4-5 نجوم اللي ما فيها أي كلمة سلبية بالتعليق.
-          أي تقييم فيه شك أو شكوى يبقى مسودة تنتظر مراجعتك زي المعتاد.
+          "Smart Auto-Publish" publishes a reply instantly without your review, but only for 4-5 star reviews with no negative
+          keywords in the comment. Any review with doubt or a complaint stays a draft awaiting your review as usual.
         </p>
         <div class="actions-row">
           <form method="POST" action="/reviews/sync">
-            <button class="btn" type="submit">🔄 جلب التقييمات الجديدة</button>
+            <button class="btn" type="submit">🔄 Fetch New Reviews</button>
           </form>
-          <a class="btn secondary" href="/auth/google">+ ربط نشاط تجاري آخر</a>
-          <a class="btn secondary" href="/reviews/export.csv">⬇️ تصدير CSV</a>
+          <a class="btn secondary" href="/auth/google">+ Connect another business</a>
+          <a class="btn secondary" href="/reviews/export.csv">⬇️ Export CSV</a>
         </div>
       <% } %>
     </section>
 
     <section class="reviews">
       <div class="reviews-header">
-        <h2>التقييمات والمسودات</h2>
+        <h2>Reviews & Drafts</h2>
         <div class="filters">
-          <a class="filter-chip <%= filterStatus === 'all' ? 'active' : '' %>" href="?status=all">الكل</a>
-          <a class="filter-chip <%= filterStatus === 'needs_reply' ? 'active' : '' %>" href="?status=needs_reply">تحتاج ردي</a>
-          <a class="filter-chip <%= filterStatus === 'published' ? 'active' : '' %>" href="?status=published">منشورة</a>
+          <a class="filter-chip <%= filterStatus === 'all' ? 'active' : '' %>" href="?status=all">All</a>
+          <a class="filter-chip <%= filterStatus === 'needs_reply' ? 'active' : '' %>" href="?status=needs_reply">Needs Reply</a>
+          <a class="filter-chip <%= filterStatus === 'published' ? 'active' : '' %>" href="?status=published">Published</a>
           <select onchange="window.location.href = this.value ? '?stars=' + this.value : '?status=<%= filterStatus %>'" class="stars-filter">
-            <option value="">كل النجوم</option>
+            <option value="">All Stars</option>
             <% [5,4,3,2,1].forEach(function(s) { %>
-              <option value="<%= s %>" <%= filterStars === s ? 'selected' : '' %>><%= s %> نجوم</option>
+              <option value="<%= s %>" <%= filterStars === s ? 'selected' : '' %>><%= s %> stars</option>
             <% }) %>
           </select>
         </div>
       </div>
 
       <% if (!reviews.length) { %>
-        <p>ما فيه تقييمات مطابقة لهذا الفلتر.</p>
+        <p>No reviews match this filter.</p>
       <% } %>
       <% reviews.forEach(function(r) { %>
         <div class="review-card" id="review-<%= r.id %>">
@@ -173,36 +173,36 @@
             <span class="stars">
               <% for (let i = 0; i < 5; i++) { %><%= i < r.star_rating ? '★' : '☆' %><% } %>
             </span>
-            <strong><%= r.reviewer_name || 'مستخدم Google' %></strong>
+            <strong><%= r.reviewer_name || 'Google user' %></strong>
             <span class="muted"><%= r.business_name %></span>
             <% if (r.draft_status === 'published' && r.auto_published) { %>
-              <span class="badge published">⚡ نُشر تلقائياً</span>
+              <span class="badge published">⚡ Auto-published</span>
             <% } else if (r.draft_status === 'published') { %>
-              <span class="badge published">تم النشر ✅</span>
+              <span class="badge published">Published ✅</span>
             <% } else if (r.has_owner_reply) { %>
-              <span class="badge">فيه رد مسبق على Google</span>
+              <span class="badge">Already has a reply on Google</span>
             <% } %>
           </div>
 
           <% if (r.comment) { %>
             <p class="review-comment"><%= r.comment %></p>
           <% } else { %>
-            <p class="review-comment muted">(تقييم بالنجوم فقط، بدون تعليق)</p>
+            <p class="review-comment muted">(Star rating only, no comment)</p>
           <% } %>
 
           <% if (!r.has_owner_reply || r.draft_status) { %>
             <form method="POST" action="/reviews/<%= r.id %>/draft" class="draft-form">
-              <label>مسودة الرد (راجعها وعدّلها قبل النشر):</label>
+              <label>Draft reply (review and edit before publishing):</label>
               <textarea name="draftText" rows="4"><%= r.draft_text || '' %></textarea>
               <div class="actions-row">
-                <button type="submit" class="btn secondary">💾 حفظ التعديل</button>
-                <button type="submit" formaction="/reviews/<%= r.id %>/regenerate" class="btn secondary">✨ إعادة توليد</button>
+                <button type="submit" class="btn secondary">💾 Save Edit</button>
+                <button type="submit" formaction="/reviews/<%= r.id %>/regenerate" class="btn secondary">✨ Regenerate</button>
                 <% if (r.draft_status !== 'published') { %>
-                  <button type="submit" formaction="/reviews/<%= r.id %>/publish" class="btn publish" onclick="return confirm('هذا الرد راح ينشر على Google مباشرة ويصير ظاهر للعموم. متأكد؟');">🚀 نشر على Google</button>
+                  <button type="submit" formaction="/reviews/<%= r.id %>/publish" class="btn publish" onclick="return confirm('This reply will be published directly to Google and become publicly visible. Are you sure?');">🚀 Publish to Google</button>
                 <% } %>
               </div>
               <% if (r.generated_by) { %>
-                <span class="muted small">توليد بواسطة: <%= r.generated_by === 'claude' ? 'الذكاء الاصطناعي' : r.generated_by === 'manual' ? 'تعديل يدوي' : 'قالب جاهز' %></span>
+                <span class="muted small">Generated by: <%= r.generated_by === 'claude' ? 'AI' : r.generated_by === 'manual' ? 'Manual edit' : 'Template' %></span>
               <% } %>
             </form>
           <% } %>

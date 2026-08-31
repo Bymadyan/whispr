@@ -118,7 +118,7 @@ router.post("/:id/draft", (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
-    if (!review) return res.status(404).send("التقييم غير موجود");
+    if (!review) return res.status(404).send("Review not found");
 
     const { draftText } = req.body;
 
@@ -144,7 +144,7 @@ router.post("/:id/regenerate", async (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
-    if (!review) return res.status(404).send("التقييم غير موجود");
+    if (!review) return res.status(404).send("Review not found");
 
     const { text, generatedBy } = await generateDraftReply({
       businessName: review.business_name,
@@ -176,7 +176,7 @@ router.post("/:id/publish", async (req, res, next) => {
   try {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
-    if (!review) return res.status(404).send("التقييم غير موجود");
+    if (!review) return res.status(404).send("Review not found");
 
     // لو المستخدم عدّل النص في الصندوق ولحقّ الضغط على نشر مباشرة بدون حفظ منفصل، نحفظ آخر نص كتبه أولاً
     if (typeof req.body.draftText === "string" && req.body.draftText.trim()) {
@@ -187,7 +187,7 @@ router.post("/:id/publish", async (req, res, next) => {
 
     const draft = db.prepare(`SELECT draft_text FROM drafts WHERE review_id = ?`).get(reviewId);
     if (!draft || !draft.draft_text || !draft.draft_text.trim()) {
-      return res.status(400).send("نص المسودة فاضي، عدّل الرد قبل النشر");
+      return res.status(400).send("Draft text is empty — edit the reply before publishing");
     }
 
     const account = db.prepare(`SELECT * FROM accounts WHERE id = ?`).get(review.account_id);

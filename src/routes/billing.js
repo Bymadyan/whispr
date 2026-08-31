@@ -17,7 +17,7 @@ router.get("/billing", requireAuth, (req, res) => {
 router.post("/billing/checkout", requireAuth, async (req, res, next) => {
   try {
     if (!stripe || !process.env.STRIPE_PRICE_ID) {
-      return res.status(500).send("نظام الدفع غير مفعّل بعد (STRIPE_SECRET_KEY / STRIPE_PRICE_ID غير مضبوطة)");
+      return res.status(500).send("Payments aren't enabled yet (STRIPE_SECRET_KEY / STRIPE_PRICE_ID not configured)");
     }
 
     let sub = db.prepare(`SELECT * FROM subscriptions WHERE user_id = ?`).get(req.user.id);

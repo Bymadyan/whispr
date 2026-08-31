@@ -59,6 +59,8 @@ body {
 }
 .btn.secondary { background: #edf1f7; color: var(--text); }
 .btn.publish { background: var(--success); }
+.btn-pay-black { background: #0a0a0a; color: #fff; }
+.btn-pay-black:hover { background: #1a1a1a; }
 .link-btn { background: none; border: none; color: var(--muted); cursor: pointer; text-decoration: underline; }
 
 .actions-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }

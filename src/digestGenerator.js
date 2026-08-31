@@ -59,34 +59,34 @@ function getTopInsightLines(userId) {
 
 function trendArrow(thisAvg, lastAvg) {
   if (thisAvg == null || lastAvg == null) return "";
-  if (thisAvg > lastAvg) return " ⬆️ تحسّن عن الأسبوع اللي قبله";
-  if (thisAvg < lastAvg) return " ⬇️ أقل من الأسبوع اللي قبله";
-  return " (بدون تغيير عن الأسبوع اللي قبله)";
+  if (thisAvg > lastAvg) return " ⬆️ up from last week";
+  if (thisAvg < lastAvg) return " ⬇️ down from last week";
+  return " (no change from last week)";
 }
 
 function templateNarrative({ businessName, stats, bestReview, worstReview, insightLines }) {
   const parts = [];
 
   if (!stats.this_week_count) {
-    parts.push(`مرحباً ${businessName}، ما وصلك أي تقييم جديد هالأسبوع.`);
+    parts.push(`Hi ${businessName}, you didn't get any new reviews this week.`);
   } else {
     parts.push(
-      `مرحباً ${businessName}، هالأسبوع وصلك ${stats.this_week_count} ${
-        stats.this_week_count === 1 ? "تقييم" : "تقييمات"
-      } بمتوسط ${stats.this_week_avg} نجوم${trendArrow(stats.this_week_avg, stats.last_week_avg)}.`
+      `Hi ${businessName}, this week you got ${stats.this_week_count} ${
+        stats.this_week_count === 1 ? "review" : "reviews"
+      } averaging ${stats.this_week_avg} stars${trendArrow(stats.this_week_avg, stats.last_week_avg)}.`
     );
   }
 
   if (insightLines.length) {
-    parts.push(`أبرز شي يستاهل انتباهك: ${insightLines[0].replace(/^•\s*/, "")}`);
+    parts.push(`Worth your attention: ${insightLines[0].replace(/^•\s*/, "")}`);
   }
 
   if (bestReview) {
-    parts.push(`أفضل تقييم وصلك: "${bestReview.comment}" — ${bestReview.reviewer_name || "عميل"} (${bestReview.star_rating}★)`);
+    parts.push(`Your best review this week: "${bestReview.comment}" — ${bestReview.reviewer_name || "a customer"} (${bestReview.star_rating}★)`);
   }
 
   if (worstReview) {
-    parts.push(`تقييم يحتاج اهتمامك: "${worstReview.comment}" — ${worstReview.star_rating}★`);
+    parts.push(`A review that needs your attention: "${worstReview.comment}" — ${worstReview.star_rating}★`);
   }
 
   return parts.join("\n\n");
@@ -96,17 +96,17 @@ async function claudeNarrative({ businessName, stats, bestReview, worstReview, i
   const Anthropic = require("@anthropic-ai/sdk");
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const facts = `اسم النشاط: ${businessName}
-عدد التقييمات هالأسبوع: ${stats.this_week_count || 0}
-متوسط النجوم هالأسبوع: ${stats.this_week_avg ?? "لا يوجد"}
-متوسط النجوم الأسبوع اللي قبله: ${stats.last_week_avg ?? "لا يوجد"}
-أهم نمط شكوى متكرر: ${insightLines[0] || "لا يوجد نمط واضح"}
-أفضل تقييم: ${bestReview ? `"${bestReview.comment}" (${bestReview.star_rating} نجوم)` : "لا يوجد"}
-أسوأ تقييم يحتاج اهتمام: ${worstReview ? `"${worstReview.comment}" (${worstReview.star_rating} نجوم)` : "لا يوجد"}`;
+  const facts = `Business name: ${businessName}
+Reviews this week: ${stats.this_week_count || 0}
+Average rating this week: ${stats.this_week_avg ?? "none"}
+Average rating last week: ${stats.last_week_avg ?? "none"}
+Top recurring complaint theme: ${insightLines[0] || "no clear pattern"}
+Best review: ${bestReview ? `"${bestReview.comment}" (${bestReview.star_rating} stars)` : "none"}
+Worst review needing attention: ${worstReview ? `"${worstReview.comment}" (${worstReview.star_rating} stars)` : "none"}`;
 
-  const system = `أنت مساعد أعمال تكتب تقرير أسبوعي مختصر ودافئ بالعربي لصاحب نشاط تجاري عن تقييمات عملائه على Google.
-اكتب 3-5 جمل بأسلوب شخصي وودود (مو رسمي جاف)، تلخّص الوضع، تسلّط الضوء على النمط المتكرر لو موجود، وتذكر أبرز تقييم إيجابي وسلبي لو موجودين.
-لا تخترع أرقام أو تفاصيل غير معطاة لك. لا تكتب عنوان أو مقدمة زي "تقرير أسبوعي:"، ابدأ مباشرة بالتحية.`;
+  const system = `You are a business assistant writing a short, warm weekly digest in English for a business owner about their customer reviews on Google.
+Write 3-5 sentences in a personal, friendly tone (not formal or dry), summarizing the situation, highlighting the recurring pattern if any, and mentioning the standout positive and negative review if present.
+Do not invent numbers or details not given to you. Do not write a title or intro like "Weekly report:", start directly with the greeting.`;
 
   const msg = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -147,8 +147,8 @@ async function buildWeeklyDigest(user) {
     narrative,
     thisWeekCount: stats.this_week_count || 0,
     subject: stats.this_week_count
-      ? `تقريرك الأسبوعي: ${stats.this_week_count} ${stats.this_week_count === 1 ? "تقييم جديد" : "تقييمات جديدة"} على SanadPay`
-      : `تقريرك الأسبوعي على SanadPay`,
+      ? `Your weekly digest: ${stats.this_week_count} ${stats.this_week_count === 1 ? "new review" : "new reviews"} on SanadPay`
+      : `Your weekly digest on SanadPay`,
   };
 }
 

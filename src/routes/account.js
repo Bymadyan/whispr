@@ -12,7 +12,7 @@ router.post("/signup", async (req, res) => {
 
   if (!businessName || !email || !password || password.length < 8) {
     return res.render("signup", {
-      error: "عبّي كل الحقول، وخلي كلمة المرور 8 أحرف على الأقل",
+      error: "Please fill in all fields, and make sure your password is at least 8 characters",
       values: { businessName, email },
     });
   }
@@ -20,7 +20,7 @@ router.post("/signup", async (req, res) => {
   const existing = db.prepare(`SELECT id FROM users WHERE email = ?`).get(email.toLowerCase().trim());
   if (existing) {
     return res.render("signup", {
-      error: "فيه حساب مسجل بهذا البريد من قبل، جرّب تسجيل الدخول",
+      error: "An account with this email already exists — try logging in instead",
       values: { businessName, email },
     });
   }
@@ -45,7 +45,7 @@ router.post("/login", async (req, res) => {
   const user = db.prepare(`SELECT * FROM users WHERE email = ?`).get((email || "").toLowerCase().trim());
 
   if (!user || !(await bcrypt.compare(password || "", user.password_hash))) {
-    return res.render("login", { error: "البريد أو كلمة المرور غير صحيحة" });
+    return res.render("login", { error: "Incorrect email or password" });
   }
 
   req.session.userId = user.id;

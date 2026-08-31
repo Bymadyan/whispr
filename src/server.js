@@ -61,12 +61,12 @@ app.use("/", require("./routes/dashboard"));
 app.use("/reviews", require("./routes/reviews"));
 
 app.use((req, res) => {
-  res.status(404).send("الصفحة غير موجودة");
+  res.status(404).send("Page not found");
 });
 
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).send(`<pre>حدث خطأ: ${String(err.message || err)}</pre>`);
+  res.status(500).send(`<pre>An error occurred: ${String(err.message || err)}</pre>`);
 });
 
 const port = process.env.PORT || 3000;

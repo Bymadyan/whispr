@@ -34,14 +34,14 @@ async function sendEmail({ toEmail, subject, html }) {
 async function notifyNewReviews({ toEmail, businessName, count }) {
   if (!process.env.RESEND_API_KEY) return;
 
-  const subject = count === 1 ? "تقييم جديد يحتاج ردك على SanadPay" : `${count} تقييمات جديدة تحتاج ردك على SanadPay`;
+  const subject = count === 1 ? "1 new review needs your reply on SanadPay" : `${count} new reviews need your reply on SanadPay`;
 
   const html = `
-    <div dir="rtl" style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2>مرحباً ${escapeHtml(businessName)} 👋</h2>
-      <p>وصلك <strong>${count}</strong> ${count === 1 ? "تقييم جديد" : "تقييمات جديدة"} على Google يحتاج مراجعتك قبل النشر.</p>
-      <p>الأداة جهزت مسودة رد جاهزة لكل وحدة — بس تحتاج تراجعها وتضغط نشر.</p>
-      <p><a href="${process.env.APP_BASE_URL || ""}/dashboard" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">افتح لوحة التحكم</a></p>
+    <div dir="ltr" style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2>Hi ${escapeHtml(businessName)} 👋</h2>
+      <p>You have <strong>${count}</strong> ${count === 1 ? "new review" : "new reviews"} on Google that need your review before publishing.</p>
+      <p>A draft reply is ready for each one — just review it and hit publish.</p>
+      <p><a href="${process.env.APP_BASE_URL || ""}/dashboard" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">Open dashboard</a></p>
     </div>
   `;
 
@@ -50,10 +50,10 @@ async function notifyNewReviews({ toEmail, businessName, count }) {
 
 async function sendWeeklyDigest({ toEmail, subject, narrative }) {
   const html = `
-    <div dir="rtl" style="font-family: sans-serif; max-width: 480px; margin: 0 auto; line-height: 1.8;">
-      <h2>📊 تقريرك الأسبوعي</h2>
+    <div dir="ltr" style="font-family: sans-serif; max-width: 480px; margin: 0 auto; line-height: 1.8;">
+      <h2>📊 Your Weekly Digest</h2>
       <p style="white-space: pre-wrap;">${escapeHtml(narrative)}</p>
-      <p><a href="${process.env.APP_BASE_URL || ""}/dashboard" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">افتح لوحة التحكم</a></p>
+      <p><a href="${process.env.APP_BASE_URL || ""}/dashboard" style="display:inline-block;background:#2563eb;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;">Open dashboard</a></p>
     </div>
   `;
 

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <title>اختر النشاط التجاري - SanadPay</title>
+  <title>Select Business - SanadPay</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>اختر النشاط التجاري اللي تبي تربطه</h1>
+    <h1>Choose the business you'd like to connect</h1>
     <% if (!locationsByAccount.length || locationsByAccount.every(a => !a.locations.length)) { %>
-      <p class="error">ما لقينا أي نشاط تجاري مرتبط بحساب Google هذا. تأكد إنك مالك أو مدير للـ Google Business Profile.</p>
+      <p class="error">We couldn't find any business linked to this Google account. Make sure you're an owner or manager of the Google Business Profile.</p>
     <% } %>
     <% locationsByAccount.forEach(function(entry) { %>
       <% entry.locations.forEach(function(loc) { %>
@@ -19,14 +19,14 @@
           <div>
             <strong><%= loc.title %></strong>
             <% if (loc.storefrontAddress) { %>
-              <div class="muted"><%= [loc.storefrontAddress.addressLines, loc.storefrontAddress.locality].flat().filter(Boolean).join('، ') %></div>
+              <div class="muted"><%= [loc.storefrontAddress.addressLines, loc.storefrontAddress.locality].flat().filter(Boolean).join(', ') %></div>
             <% } %>
           </div>
-          <button type="submit">ربط هذا النشاط</button>
+          <button type="submit">Connect this business</button>
         </form>
       <% }) %>
     <% }) %>
-    <p><a href="/">رجوع للوحة التحكم</a></p>
+    <p><a href="/">Back to dashboard</a></p>
   </div>
 </body>
 </html>

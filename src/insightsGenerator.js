@@ -26,11 +26,11 @@ function keywordFrequencyInsight(reviews, customKeywords) {
     .slice(0, 5);
 
   if (!sorted.length) {
-    return "ما لقينا نمط واضح متكرر بالتقييمات الأخيرة — الشكاوى متنوعة وغير مركّزة على سبب واحد.";
+    return "No clear recurring pattern found in recent reviews — complaints are varied and not concentrated on one cause.";
   }
 
   return sorted
-    .map(([kw, count]) => `• "${kw}" — ذُكرت في ${count} ${count === 1 ? "تقييم" : "تقييمات"}`)
+    .map(([kw, count]) => `• "${kw}" — mentioned in ${count} ${count === 1 ? "review" : "reviews"}`)
     .join("\n");
 }
 
@@ -39,14 +39,14 @@ async function claudeInsight(reviews, businessName) {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   const reviewsText = reviews
-    .map((r) => `- (${r.star_rating} نجوم) ${r.comment}`)
+    .map((r) => `- (${r.star_rating} stars) ${r.comment}`)
     .join("\n");
 
-  const system = `أنت محلل أعمال تساعد صاحب نشاط تجاري اسمه "${businessName}" يفهم تقييمات عملائه السلبية والمتوسطة.
-اقرأ التقييمات المعطاة واستخرج أهم 3 إلى 5 أنماط أو أسباب شكوى متكررة فعلاً (مو كل شكوى فردية، بس اللي تكررت).
-لكل نمط اكتب سطر واحد بالعربي بالصيغة: "• [وصف السبب] — ذُكر في X تقييمات تقريباً"
-لو ما فيه نمط واضح متكرر، قول هذا صراحة بجملة وحدة.
-لا تكتب مقدمة ولا خاتمة، بس النقاط مباشرة.`;
+  const system = `You are a business analyst helping the owner of a business called "${businessName}" understand their negative and neutral customer reviews.
+Read the given reviews and extract the top 3 to 5 patterns or complaint themes that actually recur (not every individual complaint, only ones that repeat).
+For each pattern write one line in English in the format: "• [description of the cause] — mentioned in about X reviews"
+If there's no clear recurring pattern, say so explicitly in one sentence.
+Do not write an introduction or conclusion, just the bullet points directly.`;
 
   const msg = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
@@ -67,7 +67,7 @@ async function generateInsights({ businessName, reviews, customKeywords }) {
 
   if (negativeOrNeutral.length < MIN_REVIEWS_FOR_INSIGHT) {
     return {
-      summary: `ما فيه بيانات كافية للتحليل بعد (نحتاج ${MIN_REVIEWS_FOR_INSIGHT} تقييمات سلبية/متوسطة فيها تعليق على الأقل).`,
+      summary: `Not enough data to analyze yet (need at least ${MIN_REVIEWS_FOR_INSIGHT} negative/neutral reviews with a comment).`,
       source: "insufficient_data",
     };
   }

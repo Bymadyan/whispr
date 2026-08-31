@@ -1,36 +1,36 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
-  <title>الاشتراك - SanadPay</title>
+  <title>Subscription - SanadPay</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
     <h1>SanadPay</h1>
-    <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+    <form method="POST" action="/logout"><button class="link-btn" type="submit">Log out</button></form>
   </header>
 
   <div class="container narrow">
     <div class="accounts">
-      <h2>الاشتراك</h2>
+      <h2>Subscription</h2>
 
       <% if (!stripeConfigured) { %>
-        <p class="error">نظام الدفع غير مفعّل بعد من إدارة المنصة. تواصل معنا.</p>
+        <p class="error">Payments aren't enabled yet. Please contact us.</p>
       <% } else if (sub && sub.status === 'active') { %>
-        <p class="badge published">اشتراكك فعّال ✅</p>
-        <p class="muted">التجديد القادم: <%= sub.current_period_end ? new Date(sub.current_period_end * 1000).toLocaleDateString('ar') : '-' %></p>
+        <p class="badge published">Your subscription is active ✅</p>
+        <p class="muted">Next renewal: <%= sub.current_period_end ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-US') : '-' %></p>
         <form method="POST" action="/billing/portal">
-          <button class="btn secondary" type="submit">إدارة الاشتراك / الإلغاء</button>
+          <button class="btn secondary" type="submit">Manage / Cancel Subscription</button>
         </form>
-        <p><a href="/dashboard">الذهاب للوحة التحكم</a></p>
+        <p><a href="/dashboard">Go to dashboard</a></p>
       <% } else { %>
         <% if (sub && sub.status && sub.status !== 'incomplete') { %>
-          <p class="error">حالة اشتراكك الحالية: <%= sub.status %>. لازم تفعّل الاشتراك عشان تقدر تستخدم اللوحة.</p>
+          <p class="error">Your subscription status: <%= sub.status %>. You need an active subscription to use the dashboard.</p>
         <% } %>
-        <p>اشترك الآن بـ <strong>35$ شهرياً</strong> وابدأ تستقبل مسودات ردود على تقييمات Google خلال دقائق.</p>
+        <p>Subscribe now for <strong>$35/month</strong> and start getting draft replies to your Google reviews within minutes.</p>
         <form method="POST" action="/billing/checkout">
-          <button class="btn hero-cta" type="submit">الدفع عبر Stripe</button>
+          <button class="btn btn-pay-black" type="submit">Pay</button>
         </form>
       <% } %>
     </div>

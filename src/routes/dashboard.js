@@ -67,7 +67,7 @@ router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
 router.post("/accounts/:id/auto-publish", requireAuth, requireActiveSubscription, (req, res) => {
   const accountId = Number(req.params.id);
   const account = db.prepare(`SELECT id FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
-  if (!account) return res.status(404).send("النشاط التجاري غير موجود");
+  if (!account) return res.status(404).send("Business not found");
 
   const enabled = req.body.enabled === "1" ? 1 : 0;
   db.prepare(`UPDATE accounts SET auto_publish_positive = ? WHERE id = ?`).run(enabled, accountId);
@@ -79,7 +79,7 @@ router.post("/accounts/:id/auto-publish", requireAuth, requireActiveSubscription
 router.post("/accounts/:id/settings", requireAuth, requireActiveSubscription, (req, res) => {
   const accountId = Number(req.params.id);
   const account = db.prepare(`SELECT id FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
-  if (!account) return res.status(404).send("النشاط التجاري غير موجود");
+  if (!account) return res.status(404).send("Business not found");
 
   const tone = VALID_TONES.includes(req.body.replyTone) ? req.body.replyTone : "friendly";
   const customKeywords = (req.body.customKeywords || "").slice(0, 1000);
@@ -98,7 +98,7 @@ router.post("/accounts/:id/insights", requireAuth, requireActiveSubscription, as
   try {
     const accountId = Number(req.params.id);
     const account = db.prepare(`SELECT * FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
-    if (!account) return res.status(404).send("النشاط التجاري غير موجود");
+    if (!account) return res.status(404).send("Business not found");
 
     const reviews = db
       .prepare(
@@ -159,7 +159,7 @@ router.get("/reviews/export.csv", requireAuth, requireActiveSubscription, (req, 
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
 
-  const header = ["التاريخ", "النشاط التجاري", "المراجع", "النجوم", "التعليق", "الحالة", "الرد"];
+  const header = ["Date", "Business", "Reviewer", "Stars", "Comment", "Status", "Reply"];
   const lines = [header.map(escapeCsv).join(",")];
   for (const r of rows) {
     lines.push(
@@ -169,7 +169,7 @@ router.get("/reviews/export.csv", requireAuth, requireActiveSubscription, (req, 
     );
   }
 
-  const csv = "﻿" + lines.join("\n"); // BOM عشان إكسل يقرأ العربي صح
+  const csv = "﻿" + lines.join("\n"); // BOM so Excel reads UTF-8 correctly
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="sanadpay-reviews-${Date.now()}.csv"`);
   res.send(csv);
