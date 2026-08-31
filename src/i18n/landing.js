@@ -4,14 +4,14 @@
 const en = {
   htmlLang: "en",
   dir: "ltr",
-  metaTitle: "Whispr — AI Review Management for Google Business Profile",
-  metaDescription: "Whispr drafts the perfect reply to every new Google review in seconds. You stay in control — review, edit, or let safe reviews publish themselves.",
+  metaTitle: "SanadPay — AI Review Management for Google Business Profile",
+  metaDescription: "SanadPay drafts the perfect reply to every new Google review in seconds. You stay in control — review, edit, or let safe reviews publish themselves.",
   nav: { login: "Log in", start: "Get Started" },
   hero: {
     eyebrow: "AI-Powered Review Management",
     title: "Reply to every Google review in seconds — without losing control.",
     subtitle:
-      "Whispr drafts the perfect reply the moment a new Google review lands, in your brand's voice. Approve every word before it goes public — or let safe, positive reviews publish themselves.",
+      "SanadPay drafts the perfect reply the moment a new Google review lands, in your brand's voice. Approve every word before it goes public — or let safe, positive reviews publish themselves.",
     cta: "Get Started — $35/mo",
     note: "No long-term contract. Cancel anytime from your dashboard.",
   },
@@ -29,7 +29,7 @@ const en = {
       { icon: "🤖", title: "AI-Drafted Replies", desc: "Every new review gets a ready-to-send, on-brand reply in seconds — in the reviewer's own language." },
       { icon: "🛡️", title: "You're Always in Control", desc: "Nothing publishes without your approval by default. Review, edit, or approve with one click." },
       { icon: "⚡", title: "Smart Auto-Publish", desc: "Let low-risk 5-star reviews publish themselves instantly, while anything uncertain waits for you." },
-      { icon: "📊", title: "Root-Cause Insights", desc: "Whispr analyzes your negative reviews and tells you exactly what's driving complaints." },
+      { icon: "📊", title: "Root-Cause Insights", desc: "SanadPay analyzes your negative reviews and tells you exactly what's driving complaints." },
       { icon: "📩", title: "Weekly Business Digest", desc: "A short, human-written summary of your week, delivered straight to your inbox." },
       { icon: "🏢", title: "Built for Multi-Location Brands", desc: "Manage every branch from a single dashboard, each with its own tone and settings." },
     ],
@@ -56,14 +56,14 @@ const en = {
 const ar = {
   htmlLang: "ar",
   dir: "rtl",
-  metaTitle: "Whispr — إدارة تقييمات Google بالذكاء الاصطناعي",
-  metaDescription: "تُعدّ Whispr رداً احترافياً على كل تقييم جديد على Google خلال ثوانٍ. راجع كل رد أو دع التقييمات الآمنة تُنشر تلقائياً.",
+  metaTitle: "SanadPay — إدارة تقييمات Google بالذكاء الاصطناعي",
+  metaDescription: "تُعدّ SanadPay رداً احترافياً على كل تقييم جديد على Google خلال ثوانٍ. راجع كل رد أو دع التقييمات الآمنة تُنشر تلقائياً.",
   nav: { login: "تسجيل الدخول", start: "ابدأ الآن" },
   hero: {
     eyebrow: "إدارة تقييمات ذكية مدعومة بالذكاء الاصطناعي",
     title: "رد على كل تقييم Google خلال ثوانٍ — دون أن تفقد السيطرة",
     subtitle:
-      "تُعدّ Whispr رداً احترافياً بصوت علامتك التجارية فور وصول أي تقييم جديد على Google. راجع كل كلمة قبل نشرها، أو دع التقييمات الإيجابية الآمنة تُنشر تلقائياً.",
+      "تُعدّ SanadPay رداً احترافياً بصوت علامتك التجارية فور وصول أي تقييم جديد على Google. راجع كل كلمة قبل نشرها، أو دع التقييمات الإيجابية الآمنة تُنشر تلقائياً.",
     cta: "ابدأ الآن — 35$ شهرياً",
     note: "بدون التزام طويل الأمد. يمكنك الإلغاء في أي وقت من لوحة التحكم.",
   },
@@ -81,7 +81,7 @@ const ar = {
       { icon: "🤖", title: "ردود مُعدّة بالذكاء الاصطناعي", desc: "كل تقييم جديد يحصل على رد جاهز للنشر خلال ثوانٍ، بنفس لغة العميل." },
       { icon: "🛡️", title: "السيطرة الكاملة بين يديك", desc: "لا يُنشر شيء دون موافقتك افتراضياً. راجع أو عدّل أو وافق بضغطة واحدة." },
       { icon: "⚡", title: "نشر تلقائي ذكي", desc: "دع التقييمات الإيجابية الآمنة تُنشر تلقائياً، بينما تنتظر أي حالة فيها شك مراجعتك." },
-      { icon: "📊", title: "تحليل الأسباب الجذرية", desc: "تحلل Whispr تقييماتك السلبية وتخبرك بالضبط بما يزعج عملاءك." },
+      { icon: "📊", title: "تحليل الأسباب الجذرية", desc: "تحلل SanadPay تقييماتك السلبية وتخبرك بالضبط بما يزعج عملاءك." },
       { icon: "📩", title: "تقرير أسبوعي ذكي", desc: "ملخص أسبوعي مختصر ومكتوب بأسلوب إنساني يصلك بريدياً مباشرة." },
       { icon: "🏢", title: "مصممة للعلامات متعددة الفروع", desc: "أدر كل فرع من لوحة تحكم واحدة، ولكل فرع نبرته وإعداداته الخاصة." },
     ],

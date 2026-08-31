@@ -27,7 +27,7 @@ router.post("/billing/checkout", requireAuth, async (req, res, next) => {
       const customer = await stripe.customers.create({
         email: req.user.email,
         name: req.user.business_name,
-        metadata: { whispr_user_id: String(req.user.id) },
+        metadata: { sanadpay_user_id: String(req.user.id) },
       });
       customerId = customer.id;
       db.prepare(`UPDATE subscriptions SET stripe_customer_id = ?, updated_at = strftime('%s','now') WHERE user_id = ?`).run(
@@ -42,8 +42,8 @@ router.post("/billing/checkout", requireAuth, async (req, res, next) => {
       line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
       success_url: `${baseUrl(req)}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl(req)}/billing`,
-      metadata: { whispr_user_id: String(req.user.id) },
-      subscription_data: { metadata: { whispr_user_id: String(req.user.id) } },
+      metadata: { sanadpay_user_id: String(req.user.id) },
+      subscription_data: { metadata: { sanadpay_user_id: String(req.user.id) } },
     });
 
     res.redirect(session.url);
@@ -119,7 +119,7 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
 
   try {
     if (event.type === "checkout.session.completed" && obj.subscription) {
-      const userId = Number(obj.metadata && obj.metadata.whispr_user_id);
+      const userId = Number(obj.metadata && obj.metadata.sanadpay_user_id);
       if (userId) {
         stripe.subscriptions.retrieve(obj.subscription).then((sub) => {
           upsertSubscriptionFromStripe(userId, obj.customer, sub);
@@ -130,7 +130,7 @@ router.post("/billing/webhook", express.raw({ type: "application/json" }), (req,
       event.type === "customer.subscription.created" ||
       event.type === "customer.subscription.deleted"
     ) {
-      const userId = Number(obj.metadata && obj.metadata.whispr_user_id);
+      const userId = Number(obj.metadata && obj.metadata.sanadpay_user_id);
       if (userId) {
         upsertSubscriptionFromStripe(userId, obj.customer, obj);
       } else {

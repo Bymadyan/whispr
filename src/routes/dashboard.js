@@ -171,7 +171,7 @@ router.get("/reviews/export.csv", requireAuth, requireActiveSubscription, (req, 
 
   const csv = "﻿" + lines.join("\n"); // BOM عشان إكسل يقرأ العربي صح
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="whispr-reviews-${Date.now()}.csv"`);
+  res.setHeader("Content-Disposition", `attachment; filename="sanadpay-reviews-${Date.now()}.csv"`);
   res.send(csv);
 });
 

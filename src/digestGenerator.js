@@ -147,8 +147,8 @@ async function buildWeeklyDigest(user) {
     narrative,
     thisWeekCount: stats.this_week_count || 0,
     subject: stats.this_week_count
-      ? `تقريرك الأسبوعي: ${stats.this_week_count} ${stats.this_week_count === 1 ? "تقييم جديد" : "تقييمات جديدة"} على Whispr`
-      : `تقريرك الأسبوعي على Whispr`,
+      ? `تقريرك الأسبوعي: ${stats.this_week_count} ${stats.this_week_count === 1 ? "تقييم جديد" : "تقييمات جديدة"} على SanadPay`
+      : `تقريرك الأسبوعي على SanadPay`,
   };
 }
 
