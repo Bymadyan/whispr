@@ -147,8 +147,8 @@ async function buildWeeklyDigest(user) {
     narrative,
     thisWeekCount: stats.this_week_count || 0,
     subject: stats.this_week_count
-      ? `Your weekly digest: ${stats.this_week_count} ${stats.this_week_count === 1 ? "new review" : "new reviews"} on SanadPay`
-      : `Your weekly digest on SanadPay`,
+      ? `Your weekly digest: ${stats.this_week_count} ${stats.this_week_count === 1 ? "new review" : "new reviews"} on Sanad Review`
+      : `Your weekly digest on Sanad Review`,
   };
 }
 

@@ -171,7 +171,7 @@ router.get("/reviews/export.csv", requireAuth, requireActiveSubscription, (req, 
 
   const csv = "﻿" + lines.join("\n"); // BOM so Excel reads UTF-8 correctly
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
-  res.setHeader("Content-Disposition", `attachment; filename="sanadpay-reviews-${Date.now()}.csv"`);
+  res.setHeader("Content-Disposition", `attachment; filename="sanad-review-reviews-${Date.now()}.csv"`);
   res.send(csv);
 });
 

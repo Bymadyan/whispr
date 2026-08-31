@@ -13,7 +13,7 @@ function escapeHtml(text) {
 async function sendEmail({ toEmail, subject, html }) {
   if (!process.env.RESEND_API_KEY) return false;
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "SanadPay <onboarding@resend.dev>";
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "Sanad Review <onboarding@resend.dev>";
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -34,7 +34,7 @@ async function sendEmail({ toEmail, subject, html }) {
 async function notifyNewReviews({ toEmail, businessName, count }) {
   if (!process.env.RESEND_API_KEY) return;
 
-  const subject = count === 1 ? "1 new review needs your reply on SanadPay" : `${count} new reviews need your reply on SanadPay`;
+  const subject = count === 1 ? "1 new review needs your reply on Sanad Review" : `${count} new reviews need your reply on Sanad Review`;
 
   const html = `
     <div dir="ltr" style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">

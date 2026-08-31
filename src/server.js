@@ -34,7 +34,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // قراءة كوكي اللغة يدوياً بدون الحاجة لمكتبة cookie-parser إضافية
 function readLangCookie(req) {
   const header = req.headers.cookie || "";
-  const match = header.match(/(?:^|;\s*)sanadpay_lang=(en|ar)/);
+  const match = header.match(/(?:^|;\s*)sanad_review_lang=(en|ar)/);
   return match ? match[1] : null;
 }
 
@@ -45,7 +45,7 @@ app.get("/", (req, res) => {
   const lang = queryLang || readLangCookie(req) || "en"; // الإنجليزي هو الافتراضي
 
   if (queryLang) {
-    res.cookie("sanadpay_lang", queryLang, { maxAge: 1000 * 60 * 60 * 24 * 365, httpOnly: false });
+    res.cookie("sanad_review_lang", queryLang, { maxAge: 1000 * 60 * 60 * 24 * 365, httpOnly: false });
   }
 
   const { getLandingCopy } = require("./i18n/landing");
@@ -71,7 +71,7 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`SanadPay شغالة على http://localhost:${port}`);
+  console.log(`Sanad Review شغالة على http://localhost:${port}`);
 });
 
 require("./scheduler").startScheduler();

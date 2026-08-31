@@ -1,4 +1,4 @@
-# SanadPay — أداة الرد التلقائي (مسودات) على تقييمات Google
+# Sanad Review — أداة الرد التلقائي (مسودات) على تقييمات Google
 
 منصة SaaS متعددة العملاء (multi-tenant): كل نشاط تجاري يسجل حساب، يشترك بـ 35$ شهرياً عبر Stripe، يربط
 حساب Google Business Profile الخاص فيه، ويحصل على مسودة رد جاهزة لكل تقييم جديد.
@@ -103,7 +103,7 @@
 
 1. أنشئ حساب على https://dashboard.stripe.com (يدعم شركات الإمارات).
 2. من Developers > API keys: انسخ **Secret key** (استخدم `sk_test_...` وقت التجربة).
-3. من Product catalog: أنشئ Product باسم "SanadPay"، وProduct Price:
+3. من Product catalog: أنشئ Product باسم "Sanad Review"، وProduct Price:
    - Recurring، شهري (Monthly)، 35.00 **USD**.
    - انسخ معرف الـ Price (يبدأ بـ `price_...`).
 4. من Developers > Webhooks: أضف Endpoint جديد يشاور على `https://<دومينك>/billing/webhook`
