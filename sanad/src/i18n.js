@@ -59,6 +59,10 @@ const BOT_MESSAGES = {
     payoutArrived: (amount, currency) => `✅ التحويل البنكي وصل حسابك! المبلغ: ${amount} ${currency}`.trim(),
     payoutFailed: (amount, currency) => `⚠️ فشل تحويل بنكي بمبلغ ${amount} ${currency} لحسابك. راجع بيانات حسابك البنكي بإعدادات Stripe أو تواصل مع الدعم.`.trim(),
     reminder: (who, amount, days) => `⏰ تذكير: فاتورة "${who}" بمبلغ ${amount} لسه ما انسددت من أكثر من ${days} أيام. تحب تتابعها؟`,
+    connectBankAccount: (connectUrl) => {
+      if (!connectUrl) return "";
+      return `\n\n💳 عشان فلوس فواتيرك تروح لحسابك البنكي مباشرة، اربطه من هنا (٣ دقايق، مرة وحدة بس):\n${connectUrl}`;
+    },
   },
 
   en: {
@@ -105,6 +109,10 @@ const BOT_MESSAGES = {
     payoutArrived: (amount, currency) => `✅ Your bank transfer arrived! Amount: ${amount} ${currency}`.trim(),
     payoutFailed: (amount, currency) => `⚠️ A bank transfer of ${amount} ${currency} to your account failed. Check your bank details in Stripe or contact support.`.trim(),
     reminder: (who, amount, days) => `⏰ Reminder: invoice "${who}" for ${amount} is still unpaid after more than ${days} days. Want to follow up?`,
+    connectBankAccount: (connectUrl) => {
+      if (!connectUrl) return "";
+      return `\n\n💳 So your invoice money lands straight in your bank account, connect it here (3 minutes, one-time):\n${connectUrl}`;
+    },
   },
 
   ur: {
@@ -151,6 +159,10 @@ const BOT_MESSAGES = {
     payoutArrived: (amount, currency) => `✅ آپ کا بینک ٹرانسفر پہنچ گیا! رقم: ${amount} ${currency}`.trim(),
     payoutFailed: (amount, currency) => `⚠️ ${amount} ${currency} کا بینک ٹرانسفر ناکام ہو گیا۔ Stripe میں اپنی بینک تفصیلات چیک کریں یا سپورٹ سے رابطہ کریں۔`.trim(),
     reminder: (who, amount, days) => `⏰ یاد دہانی: انوائس "${who}" بمبلغ ${amount} ${days} دن سے زیادہ سے ادا نہیں ہوا۔ پیروی کرنا چاہیں گے؟`,
+    connectBankAccount: (connectUrl) => {
+      if (!connectUrl) return "";
+      return `\n\n💳 تاکہ آپ کے انوائس کی رقم سیدھا بینک اکاؤنٹ میں جائے، یہاں سے جوڑیں (3 منٹ، ایک بار):\n${connectUrl}`;
+    },
   },
 };
 

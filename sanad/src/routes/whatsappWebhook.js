@@ -119,7 +119,20 @@ router.post("/whatsapp/webhook", express.urlencoded({ extended: false }), valida
       if (pending) {
         db.prepare(`INSERT OR IGNORE INTO whatsapp_links (user_id, phone_number) VALUES (?, ?)`).run(pending.user_id, from);
         db.prepare(`UPDATE link_codes SET used_at = strftime('%s','now') WHERE id = ?`).run(pending.id);
-        return reply(res, msg.linkSuccess);
+
+        // بعتع رابط ربط الحساب البنكي للمستخدم القديم لو ما عنده واحد
+        const linkedUser = db.prepare(`SELECT * FROM users WHERE id = ?`).get(pending.user_id);
+        let replyMsg = msg.linkSuccess;
+        if (linkedUser && !linkedUser.stripe_connect_account_id) {
+          try {
+            const connectUrl = await buildConnectOnboardingUrl(linkedUser);
+            replyMsg += msg.connectBankAccount(connectUrl);
+          } catch (err) {
+            console.error("فشل إنشاء رابط ربط الحساب البنكي:", err.message);
+          }
+        }
+
+        return reply(res, replyMsg);
       }
     }
 
