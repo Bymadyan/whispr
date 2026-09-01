@@ -1,76 +1,75 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>سند — حوّل رسالتك الصوتية بواتساب إلى فاتورة جاهزة</title>
+  <title>SanadPay — Turn Your Voice Note into a Professional Invoice</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>سند</h1>
+    <h1>SanadPay</h1>
     <nav class="nav-links">
-      <a href="/login">تسجيل الدخول</a>
-      <a href="/signup" class="btn">ابدأ الآن</a>
+      <a href="/login">Sign In</a>
+      <a href="/signup" class="btn">Get Started</a>
     </nav>
   </header>
 
   <section class="hero">
-    <h2>وثّق شغلك وحصّل فلوسك بدون ورق ولا نسيان</h2>
+    <h2>Document Your Work, Get Paid Faster</h2>
     <p class="hero-sub">
-      خلّصت شغلة عند زبون؟ ابعت رسالة صوتية بواتساب لسند تقولها تفاصيل الشغلة والمبلغ — وخلال ثوانٍ
-      يجهّز لك فاتورة منظمة برابط دفع جاهز ترسله لزبونك، ويذكّرك تلقائياً لو تأخر التحصيل.
+      Finished a job? Send a voice note on WhatsApp describing the work and amount — SanadPay instantly creates a professional invoice with a payment link. Get automatic payment reminders too.
     </p>
     <% if (whatsappNumber) { %>
-      <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">📱 جرّب الحين من واتساب — مجاناً</a>
-      <p class="muted small">بدون تسجيل ولا كلمة مرور ولا اشتراك. استخدام غير محدود، مجاني بالكامل.</p>
+      <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hi') %>" class="btn hero-cta" target="_blank" rel="noopener">📱 Try Now on WhatsApp — Free</a>
+      <p class="muted small">No signup, no password, no subscription. Unlimited use, completely free.</p>
     <% } else { %>
-      <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
+      <a href="/signup" class="btn hero-cta">Get Started</a>
     <% } %>
   </section>
 
   <section class="features">
     <div class="feature-card">
-      <h3>🎙️ صوت بس، مافيه كتابة</h3>
-      <p>احكي تفاصيل الشغلة والمبلغ بصوتك على واتساب، وسند يحولها لفاتورة منظمة فوراً.</p>
+      <h3>🎙️ Voice Only</h3>
+      <p>Describe your work and amount by voice on WhatsApp. SanadPay turns it into a polished invoice instantly.</p>
     </div>
     <div class="feature-card">
-      <h3>💸 ما تنسى تحصّل</h3>
-      <p>تذكير تلقائي لك لو فاتورة زبون تأخرت أكثر من ٣ أيام بدون تحصيل.</p>
+      <h3>💸 Never Forget to Collect</h3>
+      <p>Automatic reminders if an invoice goes unpaid for more than 3 days.</p>
     </div>
     <div class="feature-card">
-      <h3>📋 لوحة تحكم بسيطة</h3>
-      <p>كل فواتيرك (مسددة وغير مسددة) بمكان واحد، تراجعها وتعدّلها بأي وقت.</p>
+      <h3>📋 Simple Dashboard</h3>
+      <p>All your invoices in one place — view, edit, and track payment status anytime.</p>
     </div>
     <div class="feature-card">
-      <h3>📱 داخل واتساب اللي أنت مستخدمه</h3>
-      <p>ما تحتاج تحمّل تطبيق جديد ولا تتعلم شي — كله يصير من نفس واتسابك.</p>
+      <h3>📱 Works Within WhatsApp</h3>
+      <p>No new app to download, no learning curve — everything happens in WhatsApp you already use.</p>
     </div>
   </section>
 
   <section class="pricing">
-    <h2>السعر بسيط: تدفع بس لما تتقاضى</h2>
+    <h2>Simple Pricing: Pay Only When You Get Paid</h2>
     <div class="price-card">
-      <div class="price">5% <span class="muted">من كل فاتورة مدفوعة</span></div>
+      <div class="price">5% <span class="muted">of each paid invoice</span></div>
       <ul>
-        <li>استخدام غير محدود، بدون اشتراك شهري إطلاقاً</li>
-        <li>فاتورة + رابط دفع لكل شغلة، بدون أي حد</li>
-        <li>0% لو الفاتورة ما انسددت — ما فيه أي رسوم مقدماً</li>
-        <li>بدون تسجيل ولا بطاقة دفع عشان تبدأ</li>
+        <li>Unlimited use, no monthly subscription ever</li>
+        <li>Invoice + payment link for every job, no limits</li>
+        <li>0% if invoice goes unpaid — no upfront fees</li>
+        <li>No signup required, no payment card needed</li>
       </ul>
       <% if (whatsappNumber) { %>
-        <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('مرحباً') %>" class="btn hero-cta" target="_blank" rel="noopener">ابدأ من واتساب</a>
+        <a href="https://wa.me/<%= whatsappNumber %>?text=<%= encodeURIComponent('Hi') %>" class="btn hero-cta" target="_blank" rel="noopener">Start on WhatsApp</a>
       <% } else { %>
-        <a href="/signup" class="btn hero-cta">ابدأ الآن</a>
+        <a href="/signup" class="btn hero-cta">Get Started</a>
       <% } %>
     </div>
   </section>
 
   <footer class="footer">
     <p class="muted small">
-      سند ·
-      <a href="/terms" class="muted small">الشروط والأحكام</a> ·
-      <a href="/privacy" class="muted small">سياسة الخصوصية</a>
+      SanadPay ·
+      <a href="/terms" class="muted small">Terms & Conditions</a> ·
+      <a href="/privacy" class="muted small">Privacy Policy</a>
     </p>
   </footer>
 </body>

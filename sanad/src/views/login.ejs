@@ -1,23 +1,24 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل الدخول - سند</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - SanadPay</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <div class="login-box">
-    <h1>سند</h1>
-    <p>تسجيل الدخول للوحة التحكم</p>
+    <h1>SanadPay</h1>
+    <p>Sign in to your dashboard</p>
     <% if (error) { %>
       <p class="error"><%= error %></p>
     <% } %>
     <form method="POST" action="/login">
-      <input type="email" name="email" placeholder="البريد الإلكتروني" required autofocus />
-      <input type="password" name="password" placeholder="كلمة المرور" required />
-      <button type="submit">دخول</button>
+      <input type="email" name="email" placeholder="Email address" required autofocus />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Sign In</button>
     </form>
-    <p class="muted small">ما عندك حساب؟ <a href="/signup">أنشئ حساب جديد</a></p>
+    <p class="muted small">Don't have an account? <a href="/signup">Create one</a></p>
   </div>
 </body>
 </html>

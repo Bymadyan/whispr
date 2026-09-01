@@ -1,44 +1,45 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>اربط واتساب - سند</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Link WhatsApp - SanadPay</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>سند</h1>
-    <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+    <h1>SanadPay</h1>
+    <form method="POST" action="/logout"><button class="link-btn" type="submit">Sign Out</button></form>
   </header>
 
   <div class="container narrow">
     <% if (link) { %>
       <div class="accounts">
-        <h2>رقمك مربوط ✅</h2>
-        <p class="muted">الرقم المربوط: <%= link.phone_number.replace('whatsapp:', '') %></p>
-        <p>ابعت الحين رسالة صوتية أو نصية على واتساب سند فيها تفاصيل أي شغلة، وراح تجيك فاتورة جاهزة فوراً.</p>
-        <p><a href="/dashboard" class="btn">الذهاب للوحة التحكم</a></p>
+        <h2>WhatsApp Linked ✅</h2>
+        <p class="muted">Linked number: <%= link.phone_number.replace('whatsapp:', '') %></p>
+        <p>Now send a voice note or text to SanadPay on WhatsApp describing any job, and you'll get an invoice instantly.</p>
+        <p><a href="/dashboard" class="btn">Go to Dashboard</a></p>
       </div>
     <% } else { %>
       <div class="accounts">
-        <h2>اربط رقم واتسابك</h2>
-        <p>خطوتين بس:</p>
+        <h2>Link Your WhatsApp</h2>
+        <p>Two simple steps:</p>
         <ol>
-          <li>احفظ رقم سند على واتسابك: <strong><%= whatsappNumber %></strong></li>
-          <li>ابعت له رسالة نصية فيها الرمز التالي بالضبط:</li>
+          <li>Save this number to WhatsApp: <strong><%= whatsappNumber %></strong></li>
+          <li>Send this code to the number:</li>
         </ol>
 
         <div class="code-box">
           <div class="code"><%= pendingCode.code %></div>
-          <p class="muted small">صالح لمدة 30 دقيقة</p>
+          <p class="muted small">Valid for 30 minutes</p>
         </div>
 
         <form method="POST" action="/connect-whatsapp/new-code">
-          <button class="link-btn" type="submit">الرمز انتهت صلاحيته؟ ولّد رمز جديد</button>
+          <button class="link-btn" type="submit">Code expired? Generate a new one</button>
         </form>
 
-        <p class="muted small">بعد ما تبعت الرمز، حدّث هذي الصفحة لتتأكد إن الربط تم.</p>
-        <p><a href="/connect-whatsapp">🔄 تحديث الصفحة</a></p>
+        <p class="muted small">After sending the code, refresh this page to confirm linking.</p>
+        <p><a href="/connect-whatsapp">🔄 Refresh Page</a></p>
       </div>
     <% } %>
   </div>

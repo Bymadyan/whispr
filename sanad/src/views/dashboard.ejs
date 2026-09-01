@@ -1,84 +1,85 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>لوحة التحكم - سند</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - SanadPay</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>سند</h1>
+    <h1>SanadPay</h1>
     <nav class="nav-links">
-      <a href="/connect-whatsapp">إعدادات واتساب</a>
-      <form method="POST" action="/logout"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+      <a href="/connect-whatsapp">WhatsApp Settings</a>
+      <form method="POST" action="/logout"><button class="link-btn" type="submit">Sign Out</button></form>
     </nav>
   </header>
 
   <div class="container">
     <div class="accounts">
       <% if (!user.business_name) { %>
-        <p>📝 خلي زبونك يشوف اسمك الحقيقي بالفاتورة بدل "مزوّد الخدمة":</p>
+        <p>📝 Set your business name (this appears on customer invoices):</p>
       <% } else { %>
-        <p class="muted small">الاسم الظاهر بفواتيرك: <strong><%= user.business_name %></strong></p>
+        <p class="muted small">Your name on invoices: <strong><%= user.business_name %></strong></p>
       <% } %>
       <form method="POST" action="/account/business-name" style="display:flex; gap:8px; flex-wrap:wrap;">
-        <input type="text" name="businessName" placeholder="اسمك أو اسم نشاطك التجاري" value="<%= user.business_name || '' %>" required style="flex:1; min-width:200px; padding:10px; border-radius:8px; border:1px solid var(--border);" />
-        <button class="btn" type="submit"><%= user.business_name ? 'تحديث' : 'حفظ' %></button>
+        <input type="text" name="businessName" placeholder="Your name or business name" value="<%= user.business_name || '' %>" required style="flex:1; min-width:200px;" />
+        <button class="btn" type="submit"><%= user.business_name ? 'Update' : 'Save' %></button>
       </form>
     </div>
 
     <% if (!link) { %>
       <div class="accounts">
-        <p class="error">رقم واتسابك مو مربوط بعد.</p>
-        <p><a href="/connect-whatsapp" class="btn">اربط رقمك الحين</a></p>
+        <p class="error">⚠️ Your WhatsApp number is not linked yet.</p>
+        <p><a href="/connect-whatsapp" class="btn">Link WhatsApp Now</a></p>
       </div>
     <% } %>
 
     <div class="stats-row">
       <div class="stat-card">
         <div class="value"><%= totals.unpaid.toFixed(2) %></div>
-        <div class="label">إجمالي غير مسدد</div>
+        <div class="label">Unpaid Total</div>
       </div>
       <div class="stat-card">
         <div class="value"><%= totals.paid.toFixed(2) %></div>
-        <div class="label">إجمالي محصّل</div>
+        <div class="label">Paid Total</div>
       </div>
       <div class="stat-card">
         <div class="value"><%= invoices.length %></div>
-        <div class="label">عدد الفواتير</div>
+        <div class="label">Total Invoices</div>
       </div>
     </div>
 
     <div class="invoices">
-      <h2>فواتيرك</h2>
+      <h2>Your Invoices</h2>
 
       <% if (invoices.length === 0) { %>
         <div class="empty-state">
-          <p>ما فيه فواتير بعد.</p>
-          <p class="muted small">ابعت رسالة صوتية أو نصية على واتساب سند تصف فيها أي شغلة، وراح تظهر هنا فوراً.</p>
+          <p>No invoices yet.</p>
+          <p class="muted small">Send a voice note or text on WhatsApp describing a job and the amount, and it will appear here instantly.</p>
         </div>
       <% } %>
 
       <% invoices.forEach(inv => { %>
         <div class="invoice-card">
           <div class="invoice-info">
-            <h4><%= inv.customer_name || 'زبون بدون اسم' %></h4>
+            <h4><%= inv.customer_name || 'Unknown Customer' %></h4>
             <p><%= inv.description || '-' %></p>
-            <p><strong><%= inv.amount != null ? inv.amount : '؟' %> <%= inv.currency || '' %></strong></p>
-            <p class="muted small"><%= new Date(inv.created_at * 1000).toLocaleString('ar') %> · <%= inv.source === 'voice' ? '🎙️ صوتي' : '⌨️ نصي' %></p>
+            <p><strong><%= inv.amount != null ? inv.amount : '?' %> <%= inv.currency || '' %></strong></p>
+            <p class="muted small"><%= new Date(inv.created_at * 1000).toLocaleString('en-US') %> · <%= inv.source === 'voice' ? '🎙️ Voice' : '⌨️ Text' %></p>
             <% if (inv.payment_url) { %>
-              <p class="small"><a href="/invoice/<%= inv.public_token %>" target="_blank" rel="noopener">🧾 فاتورة الزبون</a></p>
+              <p class="small"><a href="/invoice/<%= inv.public_token %>" target="_blank" rel="noopener">🧾 View Invoice</a></p>
             <% } %>
           </div>
           <div>
-            <span class="badge <%= inv.status === 'paid' ? 'paid' : '' %>"><%= inv.status === 'paid' ? 'مسددة' : 'غير مسددة' %></span>
+            <span class="badge <%= inv.status === 'paid' ? 'paid' : '' %>"><%= inv.status === 'paid' ? 'Paid' : 'Unpaid' %></span>
             <% if (inv.status === 'paid') { %>
               <form method="POST" action="/invoices/<%= inv.id %>/mark-unpaid">
-                <button class="btn secondary small-btn" type="submit">تراجع عن التسديد</button>
+                <button class="btn secondary small-btn" type="submit">Mark Unpaid</button>
               </form>
             <% } else { %>
               <form method="POST" action="/invoices/<%= inv.id %>/mark-paid">
-                <button class="btn small-btn" type="submit">علّمها مسددة</button>
+                <button class="btn small-btn" type="submit">Mark Paid</button>
               </form>
             <% } %>
           </div>
