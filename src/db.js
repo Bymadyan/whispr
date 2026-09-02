@@ -19,9 +19,11 @@ db.exec(`
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
+  -- كل نشاط تجاري مربوط له اشتراكه الخاص (35$/شهر لكل فرع/بزنس، مو اشتراك واحد يغطي كل حسابات المستخدم)
   CREATE TABLE IF NOT EXISTS subscriptions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    account_id INTEGER UNIQUE REFERENCES accounts(id),
     stripe_customer_id TEXT,
     stripe_subscription_id TEXT,
     status TEXT NOT NULL DEFAULT 'incomplete', -- incomplete | active | trialing | past_due | canceled | unpaid
@@ -46,6 +48,7 @@ db.exec(`
     insight_summary TEXT, -- آخر تحليل للأنماط المتكررة بالتقييمات السلبية
     insight_generated_at INTEGER,
     insight_source TEXT, -- claude | keywords
+    google_review_link TEXT, -- رابط مباشر لصفحة كتابة تقييم جديد على Google (من metadata.newReviewUri)، يُستخدم لكود QR
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
   );
 
@@ -74,6 +77,26 @@ db.exec(`
     published_at INTEGER
   );
 `);
+
+// ترقية: نقل الاشتراك من "واحد لكل مستخدم" إلى "واحد لكل نشاط تجاري مربوط" (كل فرع/بزنس يدفع اشتراكه لحاله).
+// ما فيه بيانات عملاء حقيقيين مدفوعين بعد (لسه قبل الإطلاق)، فنعيد إنشاء الجدول بدل ترحيل بيانات تجريبية قديمة.
+const subColumns = db.prepare(`PRAGMA table_info(subscriptions)`).all().map((c) => c.name);
+if (subColumns.length && !subColumns.includes("account_id")) {
+  db.exec(`DROP TABLE subscriptions`);
+  db.exec(`
+    CREATE TABLE subscriptions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      account_id INTEGER UNIQUE REFERENCES accounts(id),
+      stripe_customer_id TEXT,
+      stripe_subscription_id TEXT,
+      status TEXT NOT NULL DEFAULT 'incomplete',
+      current_period_end INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      updated_at INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+    );
+  `);
+}
 
 // ترقية بسيطة لقواعد بيانات قديمة أُنشئت قبل إضافة نظام الحسابات المتعدد (multi-tenant)
 const userColumns = db.prepare(`PRAGMA table_info(users)`).all().map((c) => c.name);
@@ -105,6 +128,9 @@ if (!accountColumns.includes("insight_generated_at")) {
 }
 if (!accountColumns.includes("insight_source")) {
   db.exec(`ALTER TABLE accounts ADD COLUMN insight_source TEXT`);
+}
+if (!accountColumns.includes("google_review_link")) {
+  db.exec(`ALTER TABLE accounts ADD COLUMN google_review_link TEXT`);
 }
 
 const draftColumns = db.prepare(`PRAGMA table_info(drafts)`).all().map((c) => c.name);

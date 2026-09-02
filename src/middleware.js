@@ -13,13 +13,10 @@ function requireAuth(req, res, next) {
 
 const ACTIVE_STATUSES = new Set(["active", "trialing"]);
 
-function requireActiveSubscription(req, res, next) {
-  const sub = db.prepare(`SELECT * FROM subscriptions WHERE user_id = ?`).get(req.user.id);
-  if (!sub || !ACTIVE_STATUSES.has(sub.status)) {
-    return res.redirect("/billing");
-  }
-  req.subscription = sub;
-  next();
+// كل نشاط تجاري له اشتراكه الخاص (مو اشتراك واحد يغطي كل حسابات المستخدم)
+function isAccountActive(accountId) {
+  const sub = db.prepare(`SELECT status FROM subscriptions WHERE account_id = ?`).get(accountId);
+  return !!sub && ACTIVE_STATUSES.has(sub.status);
 }
 
-module.exports = { requireAuth, requireActiveSubscription };
+module.exports = { requireAuth, isAccountActive, ACTIVE_STATUSES };

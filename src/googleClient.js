@@ -91,7 +91,7 @@ async function listGoogleAccounts(client) {
 
 // يجيب المواقع/النشاطات التجارية تحت حساب Google معين
 async function listLocations(client, accountName) {
-  const readMask = "name,title,storefrontAddress,phoneNumbers";
+  const readMask = "name,title,storefrontAddress,phoneNumbers,metadata.newReviewUri";
   const data = await apiRequest(
     client,
     `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations?readMask=${encodeURIComponent(

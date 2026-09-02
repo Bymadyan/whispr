@@ -3,6 +3,8 @@
 
 const db = require("./db");
 
+const ACTIVE_JOIN = `JOIN subscriptions s ON s.account_id = a.id AND s.status IN ('active','trialing')`;
+
 function getStats(userId) {
   return db
     .prepare(
@@ -13,6 +15,7 @@ function getStats(userId) {
          ROUND(AVG(CASE WHEN r.review_create_time >= datetime('now','-14 days') AND r.review_create_time < datetime('now','-7 days') THEN r.star_rating END), 1) AS last_week_avg
        FROM reviews r
        JOIN accounts a ON a.id = r.account_id
+       ${ACTIVE_JOIN}
        WHERE a.user_id = ?`
     )
     .get(userId);
@@ -23,6 +26,7 @@ function getBestReview(userId) {
     .prepare(
       `SELECT r.star_rating, r.comment, r.reviewer_name, a.business_name
        FROM reviews r JOIN accounts a ON a.id = r.account_id
+       ${ACTIVE_JOIN}
        WHERE a.user_id = ? AND r.review_create_time >= datetime('now','-7 days')
          AND r.comment IS NOT NULL AND r.comment != '' AND r.star_rating >= 4
        ORDER BY r.star_rating DESC, r.id DESC LIMIT 1`
@@ -35,6 +39,7 @@ function getWorstReview(userId) {
     .prepare(
       `SELECT r.star_rating, r.comment, r.reviewer_name, a.business_name
        FROM reviews r JOIN accounts a ON a.id = r.account_id
+       ${ACTIVE_JOIN}
        WHERE a.user_id = ? AND r.review_create_time >= datetime('now','-7 days')
          AND r.comment IS NOT NULL AND r.comment != '' AND r.star_rating <= 3
        ORDER BY r.star_rating ASC, r.id DESC LIMIT 1`
@@ -44,7 +49,11 @@ function getWorstReview(userId) {
 
 function getTopInsightLines(userId) {
   const accounts = db
-    .prepare(`SELECT business_name, insight_summary FROM accounts WHERE user_id = ? AND insight_summary IS NOT NULL`)
+    .prepare(
+      `SELECT a.business_name, a.insight_summary FROM accounts a
+       ${ACTIVE_JOIN}
+       WHERE a.user_id = ? AND a.insight_summary IS NOT NULL`
+    )
     .all(userId);
 
   const lines = [];
@@ -123,7 +132,9 @@ Do not invent numbers or details not given to you. Do not write a title or intro
 
 // يرجّع null لو ما عند العميل أي نشاط تجاري مربوط أصلاً
 async function buildWeeklyDigest(user) {
-  const accounts = db.prepare(`SELECT id FROM accounts WHERE user_id = ?`).all(user.id);
+  const accounts = db
+    .prepare(`SELECT a.id FROM accounts a ${ACTIVE_JOIN} WHERE a.user_id = ?`)
+    .all(user.id);
   if (!accounts.length) return null;
 
   const stats = getStats(user.id);

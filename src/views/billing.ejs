@@ -14,24 +14,46 @@
   <div class="container narrow">
     <div class="accounts">
       <h2>Subscription</h2>
+      <p class="muted">Each connected business has its own $35/month subscription — add as many businesses as you like and pay only for the ones you activate.</p>
 
       <% if (!stripeConfigured) { %>
         <p class="error">Payments aren't enabled yet. Please contact us.</p>
-      <% } else if (sub && sub.status === 'active') { %>
-        <p class="badge published">Your subscription is active ✅</p>
-        <p class="muted">Next renewal: <%= sub.current_period_end ? new Date(sub.current_period_end * 1000).toLocaleDateString('en-US') : '-' %></p>
-        <form method="POST" action="/billing/portal">
-          <button class="btn secondary" type="submit">Manage / Cancel Subscription</button>
-        </form>
-        <p><a href="/dashboard">Go to dashboard</a></p>
+      <% } %>
+
+      <% if (!accounts.length) { %>
+        <p>You haven't connected any business yet.</p>
+        <a class="btn" href="/auth/google">+ Connect Google Business Profile</a>
       <% } else { %>
-        <% if (sub && sub.status && sub.status !== 'incomplete') { %>
-          <p class="error">Your subscription status: <%= sub.status %>. You need an active subscription to use the dashboard.</p>
+        <ul class="billing-list">
+          <% accounts.forEach(function(a) { %>
+            <% var isActive = activeStatuses.has(a.sub_status); %>
+            <li class="billing-item">
+              <div>
+                <strong><%= a.business_name %></strong>
+                <% if (isActive) { %>
+                  <span class="badge published">Active ✅</span>
+                  <p class="muted small">Next renewal: <%= a.sub_period_end ? new Date(a.sub_period_end * 1000).toLocaleDateString('en-US') : '-' %></p>
+                <% } else { %>
+                  <span class="badge"><%= a.sub_status && a.sub_status !== 'incomplete' ? a.sub_status : 'Needs payment' %></span>
+                  <form method="POST" action="/billing/<%= a.id %>/checkout">
+                    <button class="btn btn-pay-black" type="submit">Pay $35/mo</button>
+                  </form>
+                <% } %>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+
+        <% if (hasStripeCustomer) { %>
+          <form method="POST" action="/billing/portal">
+            <button class="btn secondary" type="submit">Manage Subscriptions / Payment Method</button>
+          </form>
         <% } %>
-        <p>Subscribe now for <strong>$35/month</strong> and start getting draft replies to your Google reviews within minutes.</p>
-        <form method="POST" action="/billing/checkout">
-          <button class="btn btn-pay-black" type="submit">Pay</button>
-        </form>
+
+        <div class="actions-row">
+          <a class="btn secondary" href="/auth/google">+ Connect another business</a>
+          <a href="/dashboard">Go to dashboard</a>
+        </div>
       <% } %>
     </div>
   </div>

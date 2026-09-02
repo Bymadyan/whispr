@@ -30,10 +30,9 @@ router.post("/signup", async (req, res) => {
     .prepare(`INSERT INTO users (business_name, email, password_hash) VALUES (?, ?, ?)`)
     .run(businessName.trim(), email.toLowerCase().trim(), passwordHash);
 
-  db.prepare(`INSERT INTO subscriptions (user_id, status) VALUES (?, 'incomplete')`).run(info.lastInsertRowid);
-
+  // ما فيه اشتراك يُنشأ هنا — كل نشاط تجاري يُفعّل اشتراكه الخاص لما يُربط لاحقاً
   req.session.userId = info.lastInsertRowid;
-  res.redirect("/billing");
+  res.redirect("/dashboard");
 });
 
 router.get("/login", (req, res) => {

@@ -1,14 +1,27 @@
 const express = require("express");
 const router = express.Router();
+const QRCode = require("qrcode");
 const db = require("../db");
-const { requireAuth, requireActiveSubscription } = require("../middleware");
+const { requireAuth, isAccountActive } = require("../middleware");
 const { VALID_TONES } = require("../replyGenerator");
 const { generateInsights } = require("../insightsGenerator");
 const { buildWeeklyDigest } = require("../digestGenerator");
 const { sendWeeklyDigest } = require("../emailer");
 
-router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
-  const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC`).all(req.user.id);
+router.get("/dashboard", requireAuth, (req, res) => {
+  const accounts = db
+    .prepare(
+      `SELECT a.*, s.status AS sub_status, s.current_period_end AS sub_period_end
+       FROM accounts a
+       LEFT JOIN subscriptions s ON s.account_id = a.id
+       WHERE a.user_id = ?
+       ORDER BY a.created_at DESC`
+    )
+    .all(req.user.id);
+
+  for (const a of accounts) {
+    a.isActive = a.sub_status === "active" || a.sub_status === "trialing";
+  }
 
   const stats = db
     .prepare(
@@ -19,6 +32,7 @@ router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
          SUM(CASE WHEN d.status = 'published' THEN 1 ELSE 0 END) AS published
        FROM reviews r
        JOIN accounts a ON a.id = r.account_id
+       JOIN subscriptions s ON s.account_id = a.id AND s.status IN ('active','trialing')
        LEFT JOIN drafts d ON d.review_id = r.id
        WHERE a.user_id = ?`
     )
@@ -45,11 +59,14 @@ router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
       `SELECT r.*, d.draft_text, d.status AS draft_status, d.generated_by, d.auto_published, a.business_name
        FROM reviews r
        JOIN accounts a ON a.id = r.account_id
+       JOIN subscriptions s ON s.account_id = a.id AND s.status IN ('active','trialing')
        LEFT JOIN drafts d ON d.review_id = r.id
        ${where}
        ORDER BY r.review_create_time DESC`
     )
     .all(...params);
+
+  const appBaseUrl = process.env.APP_BASE_URL || `${req.protocol}://${req.get("host")}`;
 
   res.render("dashboard", {
     accounts,
@@ -60,14 +77,31 @@ router.get("/dashboard", requireAuth, requireActiveSubscription, (req, res) => {
     filterStars,
     tones: VALID_TONES,
     digestSent: req.query.digestSent,
+    appBaseUrl,
   });
 });
 
+// كود QR لصفحة كتابة تقييم Google الخاصة بنشاط تجاري معين — يُستخدم لطباعته أو مشاركته مع العملاء
+router.get("/accounts/:id/qr.png", requireAuth, async (req, res, next) => {
+  try {
+    const accountId = Number(req.params.id);
+    const account = db.prepare(`SELECT google_review_link FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
+    if (!account || !account.google_review_link) return res.status(404).send("Not available yet");
+
+    const buffer = await QRCode.toBuffer(account.google_review_link, { width: 320, margin: 1 });
+    res.setHeader("Content-Type", "image/png");
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // تفعيل/تعطيل النشر التلقائي للتقييمات الإيجابية الآمنة، لكل نشاط تجاري على حدة
-router.post("/accounts/:id/auto-publish", requireAuth, requireActiveSubscription, (req, res) => {
+router.post("/accounts/:id/auto-publish", requireAuth, (req, res) => {
   const accountId = Number(req.params.id);
   const account = db.prepare(`SELECT id FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
   if (!account) return res.status(404).send("Business not found");
+  if (!isAccountActive(accountId)) return res.redirect("/billing");
 
   const enabled = req.body.enabled === "1" ? 1 : 0;
   db.prepare(`UPDATE accounts SET auto_publish_positive = ? WHERE id = ?`).run(enabled, accountId);
@@ -76,10 +110,11 @@ router.post("/accounts/:id/auto-publish", requireAuth, requireActiveSubscription
 });
 
 // تحديث إعدادات الرد لنشاط تجاري: نبرة الرد + كلمات الخطر المخصصة
-router.post("/accounts/:id/settings", requireAuth, requireActiveSubscription, (req, res) => {
+router.post("/accounts/:id/settings", requireAuth, (req, res) => {
   const accountId = Number(req.params.id);
   const account = db.prepare(`SELECT id FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
   if (!account) return res.status(404).send("Business not found");
+  if (!isAccountActive(accountId)) return res.redirect("/billing");
 
   const tone = VALID_TONES.includes(req.body.replyTone) ? req.body.replyTone : "friendly";
   const customKeywords = (req.body.customKeywords || "").slice(0, 1000);
@@ -94,11 +129,12 @@ router.post("/accounts/:id/settings", requireAuth, requireActiveSubscription, (r
 });
 
 // يحلل التقييمات السلبية/المتوسطة الأخيرة لنشاط تجاري ويطلع أهم الأسباب المتكررة
-router.post("/accounts/:id/insights", requireAuth, requireActiveSubscription, async (req, res, next) => {
+router.post("/accounts/:id/insights", requireAuth, async (req, res, next) => {
   try {
     const accountId = Number(req.params.id);
     const account = db.prepare(`SELECT * FROM accounts WHERE id = ? AND user_id = ?`).get(accountId, req.user.id);
     if (!account) return res.status(404).send("Business not found");
+    if (!isAccountActive(accountId)) return res.redirect("/billing");
 
     const reviews = db
       .prepare(
@@ -124,7 +160,7 @@ router.post("/accounts/:id/insights", requireAuth, requireActiveSubscription, as
 });
 
 // يولّد التقرير الأسبوعي الآن (بدل ما ينتظر جدولة الاثنين) ويرسله بريدياً لو الإيميل مفعّل
-router.post("/digest/send-now", requireAuth, requireActiveSubscription, async (req, res, next) => {
+router.post("/digest/send-now", requireAuth, async (req, res, next) => {
   try {
     const digest = await buildWeeklyDigest(req.user);
     if (!digest) return res.redirect("/dashboard");
@@ -140,14 +176,15 @@ router.post("/digest/send-now", requireAuth, requireActiveSubscription, async (r
   }
 });
 
-// تصدير كل تقييمات العميل كملف CSV
-router.get("/reviews/export.csv", requireAuth, requireActiveSubscription, (req, res) => {
+// تصدير تقييمات الأنشطة التجارية المفعّلة (المدفوعة) كملف CSV
+router.get("/reviews/export.csv", requireAuth, (req, res) => {
   const rows = db
     .prepare(
       `SELECT r.review_create_time, a.business_name, r.reviewer_name, r.star_rating, r.comment,
               COALESCE(d.status, 'draft') AS status, d.draft_text
        FROM reviews r
        JOIN accounts a ON a.id = r.account_id
+       JOIN subscriptions s ON s.account_id = a.id AND s.status IN ('active','trialing')
        LEFT JOIN drafts d ON d.review_id = r.id
        WHERE a.user_id = ?
        ORDER BY r.review_create_time DESC`

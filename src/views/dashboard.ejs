@@ -61,10 +61,10 @@
       </section>
     <% } %>
 
-    <% if (accounts.length) { %>
+    <% if (accounts.some(a => a.isActive)) { %>
       <section class="insights">
         <h2>📊 Smart Insights — Top Recurring Complaint Themes</h2>
-        <% accounts.forEach(function(a) { %>
+        <% accounts.filter(a => a.isActive).forEach(function(a) { %>
           <div class="insight-card">
             <div class="insight-header">
               <strong><%= a.business_name %></strong>
@@ -85,6 +85,25 @@
       </section>
     <% } %>
 
+    <% if (accounts.some(a => a.isActive && a.google_review_link)) { %>
+      <section class="insights">
+        <h2>📣 Get More Reviews</h2>
+        <% accounts.filter(a => a.isActive && a.google_review_link).forEach(function(a) { %>
+          <div class="review-link-card">
+            <div>
+              <strong><%= a.business_name %></strong>
+              <p class="muted small">Share this QR code or link — anyone who scans or clicks it goes straight to your Google review page.</p>
+              <div class="copy-row">
+                <input type="text" readonly value="<%= appBaseUrl %>/r/<%= a.id %>" id="link-<%= a.id %>" onclick="this.select()" />
+                <button type="button" class="btn secondary tiny" onclick="navigator.clipboard.writeText(document.getElementById('link-<%= a.id %>').value)">Copy Link</button>
+              </div>
+            </div>
+            <img class="review-qr" src="/accounts/<%= a.id %>/qr.png" alt="QR code for <%= a.business_name %> reviews" width="140" height="140" />
+          </div>
+        <% }) %>
+      </section>
+    <% } %>
+
     <section class="accounts">
       <h2>Connected Businesses</h2>
       <% if (!accounts.length) { %>
@@ -97,40 +116,52 @@
               <div class="account-row">
                 <div>
                   <strong><%= a.business_name %></strong>
-                  <span class="muted">
-                    <% if (a.last_synced_at) { %>
-                      Last synced: <%= new Date(a.last_synced_at * 1000).toLocaleString('en-US') %>
-                    <% } else { %>
-                      No sync yet
-                    <% } %>
-                  </span>
+                  <% if (a.isActive) { %>
+                    <span class="muted">
+                      <% if (a.last_synced_at) { %>
+                        Last synced: <%= new Date(a.last_synced_at * 1000).toLocaleString('en-US') %>
+                      <% } else { %>
+                        No sync yet
+                      <% } %>
+                    </span>
+                  <% } else { %>
+                    <span class="badge">Needs payment</span>
+                  <% } %>
                 </div>
-                <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
-                  <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
-                  <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
-                    <%= a.auto_publish_positive ? '⚡ Smart Auto-Publish: On' : '⚡ Enable Smart Auto-Publish' %>
-                  </button>
-                </form>
+                <% if (a.isActive) { %>
+                  <form method="POST" action="/accounts/<%= a.id %>/auto-publish" class="auto-publish-toggle">
+                    <input type="hidden" name="enabled" value="<%= a.auto_publish_positive ? '0' : '1' %>" />
+                    <button type="submit" class="btn tiny <%= a.auto_publish_positive ? 'secondary' : '' %>">
+                      <%= a.auto_publish_positive ? '⚡ Smart Auto-Publish: On' : '⚡ Enable Smart Auto-Publish' %>
+                    </button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/billing/<%= a.id %>/checkout">
+                    <button type="submit" class="btn btn-pay-black tiny">Pay $35/mo to activate</button>
+                  </form>
+                <% } %>
               </div>
 
-              <details class="account-settings">
-                <summary>⚙️ Reply settings for "<%= a.business_name %>"</summary>
-                <form method="POST" action="/accounts/<%= a.id %>/settings" class="settings-form">
-                  <label>Reply tone</label>
-                  <select name="replyTone">
-                    <% tones.forEach(function(t) { %>
-                      <option value="<%= t %>" <%= a.reply_tone === t ? 'selected' : '' %>>
-                        <%= t === 'friendly' ? 'Friendly (default)' : t === 'formal' ? 'Formal' : 'Short' %>
-                      </option>
-                    <% }) %>
-                  </select>
+              <% if (a.isActive) { %>
+                <details class="account-settings">
+                  <summary>⚙️ Reply settings for "<%= a.business_name %>"</summary>
+                  <form method="POST" action="/accounts/<%= a.id %>/settings" class="settings-form">
+                    <label>Reply tone</label>
+                    <select name="replyTone">
+                      <% tones.forEach(function(t) { %>
+                        <option value="<%= t %>" <%= a.reply_tone === t ? 'selected' : '' %>>
+                          <%= t === 'friendly' ? 'Friendly (default)' : t === 'formal' ? 'Formal' : 'Short' %>
+                        </option>
+                      <% }) %>
+                    </select>
 
-                  <label>Extra risk keywords (blocks auto-publish), comma-separated</label>
-                  <input type="text" name="customKeywords" placeholder="e.g. cold, late, dirty" value="<%= a.custom_risk_keywords || '' %>" />
+                    <label>Extra risk keywords (blocks auto-publish), comma-separated</label>
+                    <input type="text" name="customKeywords" placeholder="e.g. cold, late, dirty" value="<%= a.custom_risk_keywords || '' %>" />
 
-                  <button type="submit" class="btn secondary tiny">💾 Save Settings</button>
-                </form>
-              </details>
+                    <button type="submit" class="btn secondary tiny">💾 Save Settings</button>
+                  </form>
+                </details>
+              <% } %>
             </li>
           <% }) %>
         </ul>

@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const google = require("../googleClient");
-const { requireAuth, requireActiveSubscription } = require("../middleware");
+const { requireAuth } = require("../middleware");
 
-router.use(requireAuth, requireActiveSubscription);
+router.use(requireAuth);
 
 // يبدأ تدفق OAuth لربط حساب Google Business Profile
 router.get("/google", (req, res) => {
@@ -58,23 +58,25 @@ router.post("/select-location", (req, res, next) => {
     const tokens = req.session.pendingTokens;
     if (!tokens) return res.redirect("/auth/google");
 
-    const { locationName, businessName } = req.body;
+    const { locationName, businessName, reviewLink } = req.body;
     if (!locationName) return res.status(400).send("Please select a business");
 
     db.prepare(
-      `INSERT INTO accounts (user_id, business_name, location_name, access_token, refresh_token, token_expiry)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO accounts (user_id, business_name, location_name, access_token, refresh_token, token_expiry, google_review_link)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     ).run(
       req.user.id,
       businessName || locationName,
       locationName,
       tokens.access_token,
       tokens.refresh_token,
-      tokens.expiry_date
+      tokens.expiry_date,
+      reviewLink || null
     );
 
     delete req.session.pendingTokens;
-    res.redirect("/dashboard");
+    // كل نشاط تجاري جديد يحتاج اشتراكه الخاص قبل ما يشتغل — نوديه لصفحة الاشتراك
+    res.redirect("/billing");
   } catch (err) {
     next(err);
   }

@@ -21,6 +21,7 @@
     "express-session": "^1.18.0",
     "google-auth-library": "^9.14.1",
     "node-cron": "^3.0.3",
+    "qrcode": "^1.5.4",
     "stripe": "^17.3.1"
   },
   "optionalDependencies": {

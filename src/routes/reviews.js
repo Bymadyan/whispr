@@ -4,15 +4,21 @@ const db = require("../db");
 const google = require("../googleClient");
 const { generateDraftReply } = require("../replyGenerator");
 const { isLowRisk } = require("../riskClassifier");
-const { requireAuth, requireActiveSubscription } = require("../middleware");
+const { requireAuth, ACTIVE_STATUSES } = require("../middleware");
 const { notifyNewReviews } = require("../emailer");
 
-router.use(requireAuth, requireActiveSubscription);
+router.use(requireAuth);
 
-// يجيب التقييمات الجديدة فقط من Google لكل الحسابات المربوطة بهذا العميل، ويولد مسودة رد لكل تقييم جديد
+// يجيب التقييمات الجديدة فقط من Google لكل الأنشطة التجارية اللي عندها اشتراك فعّال (كل نشاط تجاري يحتاج اشتراكه الخاص)
 router.post("/sync", async (req, res, next) => {
   try {
-    const accounts = db.prepare(`SELECT * FROM accounts WHERE user_id = ?`).all(req.user.id);
+    const accounts = db
+      .prepare(
+        `SELECT a.* FROM accounts a
+         JOIN subscriptions s ON s.account_id = a.id
+         WHERE a.user_id = ? AND s.status IN ('active','trialing')`
+      )
+      .all(req.user.id);
     let newCount = 0;
     let needsReviewCount = 0;
 
@@ -106,11 +112,21 @@ router.post("/sync", async (req, res, next) => {
 function getOwnedReview(reviewId, userId) {
   return db
     .prepare(
-      `SELECT r.*, a.user_id, a.business_name, a.reply_tone, a.id AS account_id
-       FROM reviews r JOIN accounts a ON a.id = r.account_id
+      `SELECT r.*, a.user_id, a.business_name, a.reply_tone, a.id AS account_id, s.status AS sub_status
+       FROM reviews r
+       JOIN accounts a ON a.id = r.account_id
+       LEFT JOIN subscriptions s ON s.account_id = a.id
        WHERE r.id = ? AND a.user_id = ?`
     )
     .get(reviewId, userId);
+}
+
+function requireActiveReviewAccount(review, res) {
+  if (!review.sub_status || !ACTIVE_STATUSES.has(review.sub_status)) {
+    res.status(402).send("This business's subscription isn't active. Complete payment from the Subscription page to manage its reviews.");
+    return false;
+  }
+  return true;
 }
 
 // حفظ تعديل المستخدم على نص المسودة (بدون نشر)
@@ -119,6 +135,7 @@ router.post("/:id/draft", (req, res, next) => {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
     if (!review) return res.status(404).send("Review not found");
+    if (!requireActiveReviewAccount(review, res)) return;
 
     const { draftText } = req.body;
 
@@ -145,6 +162,7 @@ router.post("/:id/regenerate", async (req, res, next) => {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
     if (!review) return res.status(404).send("Review not found");
+    if (!requireActiveReviewAccount(review, res)) return;
 
     const { text, generatedBy } = await generateDraftReply({
       businessName: review.business_name,
@@ -177,6 +195,7 @@ router.post("/:id/publish", async (req, res, next) => {
     const reviewId = Number(req.params.id);
     const review = getOwnedReview(reviewId, req.user.id);
     if (!review) return res.status(404).send("Review not found");
+    if (!requireActiveReviewAccount(review, res)) return;
 
     // لو المستخدم عدّل النص في الصندوق ولحقّ الضغط على نشر مباشرة بدون حفظ منفصل، نحفظ آخر نص كتبه أولاً
     if (typeof req.body.draftText === "string" && req.body.draftText.trim()) {

@@ -16,6 +16,7 @@
         <form method="POST" action="/auth/select-location" class="location-card">
           <input type="hidden" name="locationName" value="<%= loc.name %>" />
           <input type="hidden" name="businessName" value="<%= loc.title %>" />
+          <input type="hidden" name="reviewLink" value="<%= (loc.metadata && loc.metadata.newReviewUri) || '' %>" />
           <div>
             <strong><%= loc.title %></strong>
             <% if (loc.storefrontAddress) { %>

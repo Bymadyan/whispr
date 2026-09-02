@@ -115,6 +115,27 @@ body {
 }
 .digest-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 
+.billing-list { list-style: none; padding: 0; margin: 16px 0; }
+.billing-item { padding: 14px 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.billing-item:last-child { border-bottom: none; }
+
+.review-link-card {
+  background: linear-gradient(135deg, #eef4ff, #ffffff);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.review-link-card > div { flex: 1; min-width: 220px; }
+.review-qr { border-radius: 8px; border: 1px solid var(--border); background: #fff; padding: 6px; }
+.copy-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.copy-row input { flex: 1; min-width: 180px; padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; font-size: 13px; background: var(--bg); }
+
 .reviews-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
 .filters { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .filter-chip { padding: 6px 12px; border-radius: 999px; background: var(--bg); color: var(--text); text-decoration: none; font-size: 13px; border: 1px solid var(--border); }
