@@ -26,33 +26,24 @@
 
 ## ❌ ما الناقص (بالأولوية)
 
-### 🔴 Priority 1: Stripe Connect Webhook (Sanad)
+### ✅ Priority 1: Stripe Connect Webhook (Sanad) — تمّ! ✨
 
-**المشكلة**: بدون هذا، لن تعرف النظام متى الحرفي كمّل ربط حسابه البنكي.
+**الحالة**: تم الإنشاء بنجاح عبر Stripe API
 
-**الحل - في Stripe Dashboard**:
+**التفاصيل**:
+- ✅ **ID**: `we_1UCKSU36eIjaofwxX6WfqGNm`
+- ✅ **URL**: `https://sanad-prod.up.railway.app/billing/webhook/connect`
+  - ملاحظة: URL مؤقتة — بعد deployment على Railway، حدّثها بـ domain الحقيقي
+- ✅ **Scope**: "Connected accounts" ✅
+- ✅ **Events**: `account.updated`, `payout.paid`, `payout.failed` ✅
+- ✅ **Signing Secret**: `whsec_mZYDO0Uvko5hcDxUZXU6KSyroyUkgR5Q` ✅
+- ✅ **Status**: Enabled ✅
 
-1. اذهب: https://dashboard.stripe.com/webhooks
-2. اضغط "Add endpoint"
-3. ملأ:
-   - **URL**: `https://<sanad-domain>/billing/webhook/connect`
-     - مؤقتاً (قبل deployment): `http://localhost:3000/billing/webhook/connect`
-   - **Events**: 
-     - ✅ `account.updated` (إخطار الحرفي عند ربط حسابه)
-     - ✅ `payout.paid` (إخطار عند وصول التحويل البنكي)
-     - ✅ `payout.failed` (إخطار عند فشل التحويل)
-   - **Scope**: **"Connected accounts"** (هام جداً!)
-4. انسخ الـ **Signing secret** (يبدأ بـ `whsec_`)
-5. ضعه في `sanad/.env`:
-   ```
-   STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
-   ```
-
-**بديل للتجربة المحلية**:
-```bash
-# إذا تبي تختبر محلياً مع Stripe webhook forwarding:
-stripe listen --forward-to localhost:3000/billing/webhook/connect
-```
+**ما يجب فعله**:
+1. استخدم الـ secret أعلاه في `sanad/.env` ✅ (تم بالفعل)
+2. بعد deployment على Railway، حدّث URL في Stripe dashboard من:
+   - `https://sanad-prod.up.railway.app/...`
+   - إلى: `https://sanad-xxxx.up.railway.app/...` (domain الحقيقي)
 
 ---
 
@@ -148,8 +139,8 @@ stripe listen --forward-to localhost:3000/billing/webhook/connect
 
 | المكون | الحالة | التفاصيل |
 |--------|--------|----------|
-| **Stripe - Whispr** | 70% ✅ | Product + Price + Webhook #1 موجودة |
-| **Stripe - Sanad** | 30% ⚠️ | محتاج Webhook #2 (Connect) |
+| **Stripe - Whispr** | 100% ✅ | Product + Price + Webhook #1 موجودة |
+| **Stripe - Sanad** | 100% ✅ | Webhook #1 + Webhook #2 (Connect) موجودة! |
 | **Twilio** | 0% ❌ | محتاج Account SID + Auth Token + Sandbox setup |
 | **Railway - Whispr** | 100% ✅ | مشتغلة |
 | **Railway - Sanad** | 0% ❌ | محتاج نشر مشروع جديد + Volume |
