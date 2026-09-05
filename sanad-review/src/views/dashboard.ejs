@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Whispr - لوحة التحكم</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Whispr</h1>
+    <nav class="nav-links">
+      <span class="muted small"><%= user.business_name %></span>
+      <a href="/billing">الاشتراك</a>
+      <form method="POST" action="/logout" style="display:inline"><button class="link-btn" type="submit">تسجيل خروج</button></form>
+    </nav>
+  </header>
+
+  <div class="container">
+    <section class="accounts">
+      <h2>الأنشطة التجارية المربوطة</h2>
+      <% if (!accounts.length) { %>
+        <p>ما فيه أي نشاط تجاري مربوط بعد.</p>
+        <a class="btn" href="/auth/google">+ ربط حساب Google Business Profile</a>
+      <% } else { %>
+        <ul>
+          <% accounts.forEach(function(a) { %>
+            <li>
+              <strong><%= a.business_name %></strong>
+              <span class="muted">
+                <% if (a.last_synced_at) { %>
+                  آخر مزامنة: <%= new Date(a.last_synced_at * 1000).toLocaleString('ar') %>
+                <% } else { %>
+                  ما تمت أي مزامنة بعد
+                <% } %>
+              </span>
+            </li>
+          <% }) %>
+        </ul>
+        <div class="actions-row">
+          <form method="POST" action="/reviews/sync">
+            <button class="btn" type="submit">🔄 جلب التقييمات الجديدة</button>
+          </form>
+          <a class="btn secondary" href="/auth/google">+ ربط نشاط تجاري آخر</a>
+        </div>
+      <% } %>
+    </section>
+
+    <section class="reviews">
+      <h2>التقييمات والمسودات</h2>
+      <% if (!reviews.length) { %>
+        <p>ما فيه تقييمات بعد. اضغط "جلب التقييمات الجديدة" فوق.</p>
+      <% } %>
+      <% reviews.forEach(function(r) { %>
+        <div class="review-card" id="review-<%= r.id %>">
+          <div class="review-header">
+            <span class="stars">
+              <% for (let i = 0; i < 5; i++) { %><%= i < r.star_rating ? '★' : '☆' %><% } %>
+            </span>
+            <strong><%= r.reviewer_name || 'مستخدم Google' %></strong>
+            <span class="muted"><%= r.business_name %></span>
+            <% if (r.draft_status === 'published') { %>
+              <span class="badge published">تم النشر ✅</span>
+            <% } else if (r.has_owner_reply) { %>
+              <span class="badge">فيه رد مسبق على Google</span>
+            <% } %>
+          </div>
+
+          <% if (r.comment) { %>
+            <p class="review-comment"><%= r.comment %></p>
+          <% } else { %>
+            <p class="review-comment muted">(تقييم بالنجوم فقط، بدون تعليق)</p>
+          <% } %>
+
+          <% if (!r.has_owner_reply || r.draft_status) { %>
+            <form method="POST" action="/reviews/<%= r.id %>/draft" class="draft-form">
+              <label>مسودة الرد (راجعها وعدّلها قبل النشر):</label>
+              <textarea name="draftText" rows="4"><%= r.draft_text || '' %></textarea>
+              <div class="actions-row">
+                <button type="submit" class="btn secondary">💾 حفظ التعديل</button>
+                <button type="submit" formaction="/reviews/<%= r.id %>/regenerate" class="btn secondary">✨ إعادة توليد</button>
+                <% if (r.draft_status !== 'published') { %>
+                  <button type="submit" formaction="/reviews/<%= r.id %>/publish" class="btn publish" onclick="return confirm('هذا الرد راح ينشر على Google مباشرة ويصير ظاهر للعموم. متأكد؟');">🚀 نشر على Google</button>
+                <% } %>
+              </div>
+              <% if (r.generated_by) { %>
+                <span class="muted small">توليد بواسطة: <%= r.generated_by === 'claude' ? 'الذكاء الاصطناعي' : r.generated_by === 'manual' ? 'تعديل يدوي' : 'قالب جاهز' %></span>
+              <% } %>
+            </form>
+          <% } %>
+        </div>
+      <% }) %>
+    </section>
+  </div>
+</body>
+</html>

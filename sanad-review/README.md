@@ -1,0 +1,122 @@
+# Whispr — أداة الرد التلقائي (مسودات) على تقييمات Google
+
+منصة SaaS متعددة العملاء (multi-tenant): كل نشاط تجاري يسجل حساب، يشترك بـ 35$ شهرياً عبر Stripe، يربط
+حساب Google Business Profile الخاص فيه، ويحصل على مسودة رد جاهزة لكل تقييم جديد.
+**لا يوجد نشر تلقائي أبداً** — كل رد يبقى مسودة لحد ما صاحب العمل يراجعه ويضغط زر "نشر" بنفسه.
+
+---
+
+## ⚠️ اقرأ هذا قبل أي شي: هل تقدر تبيعها "من اليوم الأول" فعلاً؟
+
+بنيت لك النظام التقني كامل (تسجيل، دفع، لوحة تحكم لكل عميل). لكن فيه بوابتين خارج سيطرتي لازم تجتازهم
+قبل ما تقدر تاخذ أول ريال حقيقي من عميل حقيقي:
+
+1. **موافقة Google على وصول تطبيقك لـ API التقييمات** — طلب رسمي تقدمه أنت، يمديها من أسبوعين لأسابيع.
+2. **Google OAuth verification** — قبل ما يقدر أي عميل *غيرك* يربط حسابه بالأداة، Google يتطلب توثيق
+   التطبيق (دومين حقيقي + سياسة خصوصية + شروط استخدام + فيديو توضيحي). بدون هذا، Google يوقف أي مستخدم
+   خارج قائمة "Test users" المحدودة (100 مستخدم كحد أقصى، ولازم تضيف كل بريد يدوياً).
+
+**توصيتي:** خلّي مفاتيح Stripe في وضع Test أول، اجمع تسجيلات "قائمة انتظار" أو عملاء تجريبيين مجاناً
+لحد ما تتأكد إن ربط Google يشتغل بشكل مستقر مع أكثر من نشاط تجاري حقيقي، وبعدها فعّل مفاتيح Stripe
+الحقيقية (Live mode) وابدأ الفوترة الفعلية. غير كذا راح تضطر ترجع فلوس لعملاء دفعوا والمنتج ما يشتغل
+لهم لأن حسابهم على Google لسه ما انربط.
+
+---
+
+## 1. الفكرة العامة (رحلة العميل)
+
+1. يدخل صفحة التسويق (`/`) ويضغط "ابدأ الآن".
+2. يسجل حساب (اسم النشاط، إيميل، كلمة مرور).
+3. يروح مباشرة لصفحة الدفع، يشترك بـ 35$/شهر عبر Stripe.
+4. بعد نجاح الدفع، يربط حساب Google Business Profile (OAuth).
+5. يضغط "جلب التقييمات الجديدة" فتجيب الأداة أي تقييم جديد وتسوي له مسودة رد.
+6. يراجع المسودة، يعدّلها لو يبي، ويضغط "نشر على Google" بنفسه — وهذي اللحظة الوحيدة اللي الأداة
+   تتواصل فيها مع Google لنشر رد.
+7. يقدر يدير اشتراكه أو يلغيه في أي وقت من صفحة "الاشتراك" (بوابة Stripe الرسمية).
+
+---
+
+## 2. المتطلبات قبل التشغيل
+
+### أ) Google Cloud (نفس خطوات النسخة السابقة)
+
+1. https://console.cloud.google.com > مشروع جديد.
+2. فعّل: **My Business Account Management API**، **My Business Business Information API**،
+   **Google My Business API** (v4، لإدارة التقييمات).
+3. ⚠️ قدّم طلب وصول لإدارة التقييمات عبر:
+   https://developers.google.com/my-business/content/basic-setup#request-access
+4. من "OAuth consent screen": نوع External، أضف Scope
+   `https://www.googleapis.com/auth/business.manage`، وأضف بريدك (وبريد أي عميل تجريبي) كـ Test user
+   لحد ما توثّق التطبيق.
+5. من "Credentials": أنشئ OAuth client ID (Web application)، وأضف Redirect URI:
+   - محلياً: `http://localhost:3000/auth/google/callback`
+   - بعد النشر: `https://<دومينك>/auth/google/callback`
+
+### ب) Stripe (الاشتراك الشهري)
+
+1. أنشئ حساب على https://dashboard.stripe.com (يدعم شركات الإمارات).
+2. من Developers > API keys: انسخ **Secret key** (استخدم `sk_test_...` وقت التجربة).
+3. من Product catalog: أنشئ Product باسم "Whispr"، وProduct Price:
+   - Recurring، شهري (Monthly)، 35.00 **USD**.
+   - انسخ معرف الـ Price (يبدأ بـ `price_...`).
+4. من Developers > Webhooks: أضف Endpoint جديد يشاور على `https://<دومينك>/billing/webhook`
+   (محلياً استخدم Stripe CLI: `stripe listen --forward-to localhost:3000/billing/webhook`)،
+   واختر الأحداث: `checkout.session.completed`, `customer.subscription.updated`,
+   `customer.subscription.deleted`. انسخ **Signing secret**.
+5. من Settings > Billing > Customer portal: فعّل الـ Customer Portal (يستخدمه العميل لإلغاء اشتراكه).
+
+### ج) تجهيز الأداة محلياً
+
+يحتاج جهازك Node.js نسخة 18 أو أحدث.
+
+```bash
+npm install
+cp .env.example .env
+```
+
+افتح `.env` واملأ:
+
+| المتغير | وش هو |
+|---|---|
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | من خطوة Google Cloud |
+| `GOOGLE_REDIRECT_URI` | `http://localhost:3000/auth/google/callback` محلياً |
+| `SESSION_SECRET` | نص عشوائي طويل |
+| `APP_BASE_URL` | `http://localhost:3000` محلياً، ورابط تطبيقك الحقيقي بعد النشر |
+| `STRIPE_SECRET_KEY` | من Stripe Dashboard |
+| `STRIPE_PRICE_ID` | معرف الـ Price اللي أنشأته (`price_...`) |
+| `STRIPE_WEBHOOK_SECRET` | من إعداد الـ Webhook |
+| `ANTHROPIC_API_KEY` | اختياري — ردود أذكى عبر Claude بدل القوالب الجاهزة |
+
+شغّل الأداة:
+
+```bash
+npm start
+```
+
+افتح `http://localhost:3000` — بتشوف صفحة التسويق، وتقدر تسجل حساب وتجرب الرحلة كاملة.
+
+---
+
+## 3. النشر على Railway
+
+1. https://railway.app > New Project > Deploy from GitHub repo (بعد ما ترفع الكود لمستودع خاص فيك).
+2. Railway يشغّل `npm start` تلقائياً.
+3. من Variables أضف نفس متغيرات `.env`، لكن:
+   - `GOOGLE_REDIRECT_URI=https://<دومينك>/auth/google/callback`
+   - `APP_BASE_URL=https://<دومينك>`
+4. **مهم**: أضف نفس رابط الـ redirect الجديد في Google Cloud Console، وأضف Webhook جديد في Stripe
+   يشاور على `https://<دومينك>/billing/webhook`.
+5. من إعدادات الخدمة أضف **Volume** واربطه بمجلد `/app/data` عشان بيانات العملاء والتقييمات ما تضيع
+   عند أي إعادة نشر (redeploy). هذا مهم جداً الحين لأنه صار فيه بيانات حسابات وفواتير عملاء حقيقيين.
+
+---
+
+## 4. حدود النسخة الحالية
+
+- **لا نشر تلقائي على الإطلاق** — مبدأ ثابت.
+- الاشتراك حالياً خطة واحدة فقط (35$/شهر بدون تجربة مجانية)، بدون خصومات أو خطط سنوية.
+- ما فيه إشعارات (بريد/واتساب) عند وصول تقييم جديد — العميل يدخل ويضغط "جلب التقييمات الجديدة" يدوياً.
+- ما فيه صفحة "نسيت كلمة المرور" بعد — لو عميل نسى كلمة مروره، الحل حالياً يدوي عن طريقك (تعديل مباشر
+  بقاعدة البيانات أو إضافة الميزة لاحقاً).
+- التسويق الفعلي (التواصل مع متاجر وشركات حقيقية) مسؤوليتك أنت — الأداة جاهزة لاستقبالهم تقنياً، لكن
+  ما فيها أي أداة إرسال حملات تسويقية أو تواصل تلقائي مع عملاء محتملين.
